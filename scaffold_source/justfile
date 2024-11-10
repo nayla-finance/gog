@@ -9,14 +9,8 @@ alias s := serve
 alias m := migrate
 alias b := build
 alias t := test
-alias i := install-tools
 alias mn := migrate-new
 alias sw := swagger
-# install cli tools
-install-tools:
-    brew install goose
-    go install github.com/swaggo/swag/cmd/swag@latest
-    export PATH="$PATH:$(go env GOPATH)/bin"
 
 # Serve the application
 serve:
@@ -25,7 +19,7 @@ serve:
 
 # Run migrations 
 migrate:
-    go run . migrate
+    go run . migrate up
 
 
 # Build the application
@@ -38,7 +32,7 @@ test:
 
 # Create new migration
 migrate-new name:
-    goose -dir internal/db/migrations/ create {{name}} sql
+    go run . migrate new {{name}}
 
 # Reset the database by stopping containers, recreating them, and running migrations
 reset:
@@ -47,6 +41,6 @@ reset:
     sleep 1
     @just migrate
 
-# Generate swagger docs or update them
+# Generate swagger docs or update them (you need to have gog installed)
 swagger:
     swag init -g cmd/serve/serve.go

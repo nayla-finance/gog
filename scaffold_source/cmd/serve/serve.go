@@ -4,12 +4,21 @@ import (
 	"fmt"
 	"time"
 
+	_ "github.com/PROJECT_NAME/docs"
+	"github.com/PROJECT_NAME/internal/config"
+	"github.com/PROJECT_NAME/internal/registry"
 	"github.com/gofiber/contrib/swagger"
 	"github.com/gofiber/fiber/v2"
-	_ "github.com/project-name/docs"
-	"github.com/project-name/internal/config"
-	"github.com/project-name/internal/registry"
+	"github.com/spf13/cobra"
 )
+
+func NewServeCmd() *cobra.Command {
+	return &cobra.Command{
+		Use:   "serve",
+		Short: "Start the server",
+		Run:   Run,
+	}
+}
 
 // @title						Your API Name
 // @version					1.0
@@ -21,7 +30,7 @@ import (
 // @name						Authorization
 // @description				JWT Authorization header using the Bearer scheme. Example: "Bearer {token}"
 // @security					Bearer
-func Run() {
+func Run(cmd *cobra.Command, args []string) {
 	cfg, err := config.Load()
 	if err != nil {
 		panic(err)
