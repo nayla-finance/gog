@@ -1,0 +1,52 @@
+set dotenv-load
+
+default:
+    @just --list
+
+
+# Aliases 
+alias s := serve
+alias m := migrate
+alias b := build
+alias t := test
+alias i := install-tools
+alias mn := migrate-new
+alias sw := swagger
+# install cli tools
+install-tools:
+    brew install goose
+    go install github.com/swaggo/swag/cmd/swag@latest
+    export PATH="$PATH:$(go env GOPATH)/bin"
+
+# Serve the application
+serve:
+    go run . serve
+
+
+# Run migrations 
+migrate:
+    go run . migrate
+
+
+# Build the application
+build name = "main": test
+    go build -o bin/{{name}} .
+
+# Run tests
+test:
+    go test ./...
+
+# Create new migration
+migrate-new name:
+    goose -dir internal/db/migrations/ create {{name}} sql
+
+# Reset the database by stopping containers, recreating them, and running migrations
+reset:
+    docker compose down
+    docker compose up -d
+    sleep 1
+    @just migrate
+
+# Generate swagger docs or update them
+swagger:
+    swag init -g cmd/serve/serve.go
