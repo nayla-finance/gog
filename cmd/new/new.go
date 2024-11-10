@@ -5,39 +5,61 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/mohamedalosaili/gog/internal/new_project"
+	"github.com/mohamedalosaili/gog/internal/project"
 	"github.com/spf13/cobra"
 )
-
-var NewCmd = &cobra.Command{
-	Use:                   "new [project name] [path]",
-	Short:                 "Create a new project",
-	Args:                  cobra.ExactArgs(2),
-	Aliases:               []string{"n"},
-	DisableFlagsInUseLine: true,
-	Run:                   runNew,
-}
 
 //go:embed template template/.*
 var template embed.FS
 
-func Run() {
-
-	if err := NewCmd.Execute(); err != nil {
-		fmt.Println(err)
-		os.Exit(1)
+func NewCmd() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "new [project name]",
+		Short: "Create a new project",
+		Args:  cobra.ExactArgs(1),
+		RunE:  runNew,
 	}
+
+	cmd.Flags().StringP("directory", "d", "", "The path to create the project in (e.g. ./my-project)")
+	cmd.Flags().StringP("repo", "r", "", "Github account name to create the repository in (e.g. your-github-username)")
+
+	return cmd
 }
 
-func runNew(cmd *cobra.Command, args []string) {
-	fmt.Println("")
+func runNew(cmd *cobra.Command, args []string) error {
+	if len(args) < 1 {
+		return fmt.Errorf("❌ Missing project name")
+	}
 
 	name := args[0]
-	path := args[1]
+	path, err := cmd.Flags().GetString("directory")
+	if err != nil {
+		return fmt.Errorf("❌ Failed to get directory flag: %w", err)
+	}
 
-	fmt.Println("Creating project...")
-	if err := new_project.CreateProject(name, path, template); err != nil {
+	repo, err := cmd.Flags().GetString("repo")
+	if err != nil {
+		return fmt.Errorf("❌ Failed to get repo flag: %w", err)
+	}
+
+	fmt.Println(`
+    ______      ______       ______   
+   /      \    /      \     /      \  
+  /$$$$$$  |  /$$$$$$  |   /$$$$$$  | 
+  $$ | _$$/   $$ |  $$ |   $$ | _$$/ 
+  $$ |/    |  $$ |  $$ |   $$ |/    | 
+  $$ |$$$$ |  $$ |  $$ |   $$ |$$$$ | 
+  $$ \__$$ |  $$ \__$$ |   $$ \__$$ | 
+  $$    $$/   $$    $$/    $$    $$/ 
+   $$$$$$/     $$$$$$/      $$$$$$/  
+  `)
+
+	p := project.NewProject(template, name, path, repo)
+
+	if err := p.Create(); err != nil {
 		fmt.Println("Error creating project:", err)
 		os.Exit(1)
 	}
+
+	return nil
 }
