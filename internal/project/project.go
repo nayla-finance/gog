@@ -16,20 +16,20 @@ const (
 )
 
 type Project struct {
-	template    embed.FS
-	name        string
-	templateDir string
-	dir         string
-	repo        string
+	template       embed.FS
+	name           string
+	templateDir    string
+	dir            string
+	gitHubUsername string
 }
 
-func NewProject(template embed.FS, name string, dir string, repo string) *Project {
+func NewProject(template embed.FS, name string, dir string, gitHubUsername string) *Project {
 	p := &Project{
-		template:    template,
-		name:        name,
-		templateDir: "template",
-		dir:         dir,
-		repo:        repo,
+		template:       template,
+		name:           name,
+		templateDir:    "template",
+		dir:            dir,
+		gitHubUsername: gitHubUsername,
 	}
 
 	p.dir = p.projectDir()
@@ -47,8 +47,8 @@ func (p *Project) Create() error {
 	fmt.Printf("🎉 Creating new project '%s'\n", p.name)
 
 	newModule := ""
-	if p.repo != "" {
-		newModule = fmt.Sprintf("github.com/%s/%s", p.repo, p.name)
+	if p.gitHubUsername != "" {
+		newModule = fmt.Sprintf("github.com/%s/%s", p.gitHubUsername, p.name)
 	} else {
 		newModule = fmt.Sprintf("github.com/%s", p.name)
 	}

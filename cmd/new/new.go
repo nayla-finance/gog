@@ -21,7 +21,7 @@ func NewCmd() *cobra.Command {
 	}
 
 	cmd.Flags().StringP("directory", "d", "", "The path to create the project in (e.g. ./my-project)")
-	cmd.Flags().StringP("repo", "r", "", "Github account name to create the repository in (e.g. your-github-username)")
+	cmd.Flags().StringP("username", "u", "", "Github username to create the project in (e.g. github.com/your-github-username/project-name)")
 
 	return cmd
 }
@@ -37,9 +37,9 @@ func runNew(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("❌ Failed to get directory flag: %w", err)
 	}
 
-	repo, err := cmd.Flags().GetString("repo")
+	gitHubUsername, err := cmd.Flags().GetString("username")
 	if err != nil {
-		return fmt.Errorf("❌ Failed to get repo flag: %w", err)
+		return fmt.Errorf("❌ Failed to get username flag: %w", err)
 	}
 
 	fmt.Println(`
@@ -54,7 +54,7 @@ func runNew(cmd *cobra.Command, args []string) error {
    $$$$$$/     $$$$$$/      $$$$$$/  
   `)
 
-	p := project.NewProject(template, name, path, repo)
+	p := project.NewProject(template, name, path, gitHubUsername)
 
 	if err := p.Create(); err != nil {
 		fmt.Println("Error creating project:", err)
