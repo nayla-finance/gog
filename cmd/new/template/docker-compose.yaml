@@ -5,12 +5,12 @@ services:
     # set shared memory limit when using docker-compose
     shm_size: 128mb
     ports:
-      - "5445:5432"
+      - "5460:5432"
     # volumes:
     #   - postgres_data:/bitnami/postgres/data
     environment:
-      POSTGRES_PASSWORD: test
-      POSTGRES_USER: test
-      POSTGRES_DB: test
+      POSTGRES_PASSWORD: mypassword
+      POSTGRES_USER: myusername
+      POSTGRES_DB: mydatabase
 volumes:
   postgres_data:

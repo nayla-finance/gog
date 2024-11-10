@@ -22,14 +22,24 @@ go install github.com/mohamedalosaili/gog@latest
 
 After installation, ensure the Go bin directory is in your PATH:
 
-#### For Linux/macOS
 Add this line to your `~/.bashrc`, `~/.zshrc`, or equivalent shell configuration file:
+open `~/.bashrc`/`~/.zshrc` file
+```bash
+nano ~/.bashrc
+#or
+nano ~/.zshrc
+```
+
+Add this line to the file:
+
 ```bash
 export PATH=$PATH:$(go env GOPATH)/bin
 ```
-Then reload your shell configuration:
+
+## Usage
+
 ```bash
-source ~/.bashrc  # or source ~/.zshrc
+gog new <project-name> <path> # path can be . to create the project in the current directory
 ```
 
 
