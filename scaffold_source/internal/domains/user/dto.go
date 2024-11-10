@@ -1,6 +1,6 @@
 package user
 
-import "github.com/project-name/internal/validator"
+import "github.com/PROJECT_NAME/internal/validator"
 
 type CreateUserDTO struct {
 	FirstName string `json:"firstName" validate:"required"`

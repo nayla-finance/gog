@@ -1,7 +1,7 @@
 package registry
 
 import (
-	"github.com/project-name/internal/domains/post"
+	"github.com/PROJECT_NAME/internal/domains/post"
 )
 
 func (r *Registry) PostRepository() *post.Repository {

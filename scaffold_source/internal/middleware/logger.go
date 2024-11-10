@@ -3,8 +3,8 @@ package middleware
 import (
 	"fmt"
 
+	"github.com/PROJECT_NAME/internal/logger"
 	"github.com/gofiber/fiber/v2"
-	"github.com/project-name/internal/logger"
 )
 
 type (

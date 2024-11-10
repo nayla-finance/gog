@@ -1,16 +1,16 @@
 package registry
 
 import (
+	"github.com/PROJECT_NAME/internal/config"
+	"github.com/PROJECT_NAME/internal/db"
+	"github.com/PROJECT_NAME/internal/domains/health"
+	"github.com/PROJECT_NAME/internal/domains/post"
+	"github.com/PROJECT_NAME/internal/domains/user"
+	"github.com/PROJECT_NAME/internal/errors"
+	"github.com/PROJECT_NAME/internal/logger"
+	"github.com/PROJECT_NAME/internal/middleware"
 	"github.com/gofiber/fiber/v2"
 	"github.com/jmoiron/sqlx"
-	"github.com/project-name/internal/config"
-	"github.com/project-name/internal/db"
-	"github.com/project-name/internal/domains/health"
-	"github.com/project-name/internal/domains/post"
-	"github.com/project-name/internal/domains/user"
-	"github.com/project-name/internal/errors"
-	"github.com/project-name/internal/logger"
-	"github.com/project-name/internal/middleware"
 )
 
 // Ensure that Registry implements RegistryProvider

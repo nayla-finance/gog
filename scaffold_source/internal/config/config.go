@@ -3,7 +3,7 @@ package config
 import (
 	"strings"
 
-	"github.com/project-name/internal/validator"
+	"github.com/PROJECT_NAME/internal/validator"
 	"github.com/spf13/viper"
 )
 
@@ -59,7 +59,7 @@ func Load() (*Config, error) {
 	viper.SetDefault("LOG_LEVEL", "info")
 	viper.SetDefault("READ_TIMEOUT", 60)
 	viper.SetDefault("WRITE_TIMEOUT", 60)
-	viper.SetDefault("DATABASE_MIGRATIONS_DIR", "internal/db/migrations")
+	viper.SetDefault("DATABASE_MIGRATIONS_DIR", "migrations")
 	viper.SetDefault("DATABASE_DRIVER", "postgres")
 	viper.SetDefault("DATABASE_MIGRATE_TABLE", "schema_migrations")
 

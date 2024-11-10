@@ -1,7 +1,7 @@
 package post
 
 import (
-	"github.com/project-name/internal/validator"
+	"github.com/PROJECT_NAME/internal/validator"
 )
 
 type CreatePostDTO struct {
