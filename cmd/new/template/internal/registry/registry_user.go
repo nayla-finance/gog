@@ -1,6 +1,6 @@
 package registry
 
-import "github.com/project-name/internal/domains/user"
+import "github.com/PROJECT_NAME/internal/domains/user"
 
 func (r *Registry) UserRepository() *user.Repository {
 	if r.userRepository == nil {

@@ -3,8 +3,8 @@ package db
 import (
 	"fmt"
 
+	"github.com/PROJECT_NAME/internal/config"
 	"github.com/jmoiron/sqlx"
-	"github.com/project-name/internal/config"
 )
 
 type (

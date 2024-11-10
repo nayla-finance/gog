@@ -3,8 +3,8 @@ package user
 import (
 	"context"
 
-	"github.com/project-name/internal/db"
-	"github.com/project-name/internal/logger"
+	"github.com/PROJECT_NAME/internal/db"
+	"github.com/PROJECT_NAME/internal/logger"
 )
 
 type (

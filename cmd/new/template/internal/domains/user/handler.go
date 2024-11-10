@@ -1,10 +1,10 @@
 package user
 
 import (
+	"github.com/PROJECT_NAME/internal/config"
+	"github.com/PROJECT_NAME/internal/errors"
+	"github.com/PROJECT_NAME/internal/logger"
 	"github.com/gofiber/fiber/v2"
-	"github.com/project-name/internal/config"
-	"github.com/project-name/internal/errors"
-	"github.com/project-name/internal/logger"
 )
 
 type (

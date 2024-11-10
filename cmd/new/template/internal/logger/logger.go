@@ -1,8 +1,8 @@
 package logger
 
 import (
+	"github.com/PROJECT_NAME/internal/config"
 	"github.com/gofiber/fiber/v2/log"
-	"github.com/project-name/internal/config"
 )
 
 type (

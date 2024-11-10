@@ -3,11 +3,11 @@ package post
 import (
 	"context"
 
+	"github.com/PROJECT_NAME/internal/config"
+	"github.com/PROJECT_NAME/internal/domains/user"
+	"github.com/PROJECT_NAME/internal/errors"
+	"github.com/PROJECT_NAME/internal/logger"
 	"github.com/google/uuid"
-	"github.com/project-name/internal/config"
-	"github.com/project-name/internal/domains/user"
-	"github.com/project-name/internal/errors"
-	"github.com/project-name/internal/logger"
 )
 
 type (

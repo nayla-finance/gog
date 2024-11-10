@@ -3,7 +3,7 @@ package post
 import (
 	"context"
 
-	"github.com/project-name/internal/db"
+	"github.com/PROJECT_NAME/internal/db"
 )
 
 type (
