@@ -39,7 +39,7 @@ export PATH=$PATH:$(go env GOPATH)/bin
 ## Usage
 
 ```bash
-gog new <project-name> <path> # path can be . to create the project in the current directory
+gog new <project-name>
 ```
 
 
