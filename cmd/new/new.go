@@ -1,4 +1,4 @@
-package n
+package new_cmd
 
 import (
 	"embed"
@@ -9,7 +9,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
-//go:embed template template/.*
+//go:embed _template _template/.*
 var template embed.FS
 
 func NewCmd() *cobra.Command {

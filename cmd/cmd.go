@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"os"
 
-	n "github.com/mohamedalosaili/gog/cmd/new"
+	new_cmd "github.com/mohamedalosaili/gog/cmd/new"
 	"github.com/spf13/cobra"
 )
 
@@ -18,7 +18,7 @@ var rootCmd = &cobra.Command{
 }
 
 func Run() {
-	rootCmd.AddCommand(n.NewCmd())
+	rootCmd.AddCommand(new_cmd.NewCmd())
 	if err := rootCmd.Execute(); err != nil {
 		fmt.Println(err)
 		os.Exit(1)

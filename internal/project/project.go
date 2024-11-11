@@ -27,7 +27,7 @@ func NewProject(template embed.FS, name string, dir string, gitHubUsername strin
 	p := &Project{
 		template:       template,
 		name:           name,
-		templateDir:    "template",
+		templateDir:    "_template",
 		dir:            dir,
 		gitHubUsername: gitHubUsername,
 	}
