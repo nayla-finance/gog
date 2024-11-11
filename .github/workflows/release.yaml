@@ -1,0 +1,93 @@
+name: Release Build
+"on":
+  release:
+    types:
+      - published
+
+permissions:
+  contents: write
+  
+jobs:
+  build-amd64-linux:
+    name: "Release - Linux - ${{ matrix.target }}"
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        include:
+          - target: linux-amd64
+            archive: tar.gz
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v4
+        with:
+          go-version: '1.23'
+
+      - name: Build
+        run: |
+          GOOS=linux GOARCH=amd64 go build -o gog .
+          tar czf ${{ github.event.repository.name }}-${{github.ref_name}}-${{ matrix.target }}.tar.gz gog README.md
+
+      - name: Upload release assets
+        uses: softprops/action-gh-release@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+            files: ${{ github.event.repository.name }}-${{github.ref_name}}-${{ matrix.target }}.tar.gz
+
+  build-amd64-macos:
+    name: "Release - Macos - ${{ matrix.target }}"
+    runs-on: macos-latest
+    strategy:
+      matrix:
+        include:
+          - target: darwin-amd64
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v4
+        with:
+          go-version: '1.23'
+
+      - name: Build
+        run: |
+          GOOS=darwin GOARCH=amd64 go build -o gog .
+          zip -9r ${{ github.event.repository.name }}-${{github.ref_name}}-${{ matrix.target }}.zip gog README.md
+
+      - name: Upload release assets
+        uses: softprops/action-gh-release@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+            files: ${{ github.event.repository.name }}-${{github.ref_name}}-${{ matrix.target }}.zip
+  build-arm64-macos:
+    name: "Release - Macos - ${{ matrix.target }}"
+    runs-on: macos-latest
+    strategy:
+      matrix:
+        include:
+          - target: darwin-arm64
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v4
+        with:
+          go-version: '1.23'
+
+      - name: Build
+        run: |
+          GOOS=darwin GOARCH=arm64 go build -o gog .
+          zip -9r ${{ github.event.repository.name }}-${{github.ref_name}}-${{ matrix.target }}.zip gog README.md
+
+      - name: Upload release assets
+        uses: softprops/action-gh-release@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+            files: ${{ github.event.repository.name }}-${{github.ref_name}}-${{ matrix.target }}.zip
