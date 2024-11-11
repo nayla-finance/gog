@@ -20,7 +20,7 @@ func NewServeCmd() *cobra.Command {
 	}
 }
 
-// @title						Your API Name
+// @title						PROJECT_NAME
 // @version					1.0
 // @description				Your API Description
 // @host						localhost:3000

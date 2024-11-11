@@ -15,7 +15,7 @@ A command-line tool to quickly scaffold new Go projects with a standardized stru
 You can install gog directly using Go:
 
 ```bash
-go install github.com/mohamedalosaili/gog@latest
+go install github.com/mohamedalosaili/gog/cmd@latest
 ```
 
 ### Path Setup (for Linux/macOS)

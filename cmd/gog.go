@@ -1,24 +1,26 @@
-package cmd
+package main
 
 import (
 	"fmt"
 	"os"
 
+	"github.com/mohamedalosaili/gog"
 	new_cmd "github.com/mohamedalosaili/gog/cmd/new"
+	"github.com/mohamedalosaili/gog/cmd/swag"
 	"github.com/spf13/cobra"
 )
 
 var rootCmd = &cobra.Command{
-	Use:   "gog [command] [flags]",
-	Short: "gog is a tool for generating Go projects",
-	// Example: "gog new <project name> <path>",
+	Use:     "gog [command]",
+	Short:   "gog is a tool for generating Go projects",
+	Version: gog.Version,
 	CompletionOptions: cobra.CompletionOptions{
 		DisableDefaultCmd: true,
 	},
 }
 
-func Run() {
-	rootCmd.AddCommand(new_cmd.NewCmd())
+func main() {
+	rootCmd.AddCommand(new_cmd.NewCmd(), swag.NewSwag())
 	if err := rootCmd.Execute(); err != nil {
 		fmt.Println(err)
 		os.Exit(1)
