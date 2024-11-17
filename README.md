@@ -43,8 +43,14 @@ gog new <project-name>
 ```
 
 
+### Troubleshooting
 
+- If you encounter any issues, while updating the version try this:
 
-
+```bash
+go clean -modcache
+rm -rf $GOPATH/pkg/mod/cache/download/github.com/mohamedalosaili/gog
+go install github.com/mohamedalosaili/gog/cmd/gog@v<version>
+```
 
 
