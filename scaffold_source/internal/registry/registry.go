@@ -33,27 +33,30 @@ type Registry struct {
 	postHandler    *post.Handler
 }
 
-func NewRegistry(c *config.Config) (*Registry, error) {
-	r := &Registry{
+func NewRegistry(c *config.Config) *Registry {
+	return &Registry{
 		config: c,
 	}
-
-	if err := r.initialize(); err != nil {
-		return nil, err
-	}
-
-	return r, nil
 }
 
-func (r *Registry) initialize() error {
-	db, err := db.Connect(r)
+func (r *Registry) Initialize(app *fiber.App) error {
+	var err error
+
+	r.db, err = db.Connect(r)
 	if err != nil {
 		return err
 	}
 
-	r.db = db
+	r.RegisterMiddlewares(app)
+	r.RegisterApiRoutes(app.Group("/api"))
+	// register other "things" (e.g. listeners, consumers, etc.)
 
 	return nil
+}
+
+func (r *Registry) Cleanup() {
+	r.db.Close()
+	// call cleanup funcs (e.g. unsubscribe listeners, etc.)
 }
 
 func (r *Registry) RegisterMiddlewares(app *fiber.App) {

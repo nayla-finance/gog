@@ -1,7 +1,11 @@
 package serve
 
 import (
+	"context"
 	"fmt"
+	"os"
+	"os/signal"
+	"syscall"
 	"time"
 
 	_ "github.com/PROJECT_NAME/docs"
@@ -16,7 +20,7 @@ func NewServeCmd() *cobra.Command {
 	return &cobra.Command{
 		Use:   "serve",
 		Short: "Start the server",
-		Run:   Run,
+		RunE:  Run,
 	}
 }
 
@@ -30,26 +34,67 @@ func NewServeCmd() *cobra.Command {
 // @name						Authorization
 // @description				JWT Authorization header using the Bearer scheme. Example: "Bearer {token}"
 // @security					Bearer
-func Run(cmd *cobra.Command, args []string) {
+func Run(cmd *cobra.Command, args []string) error {
 	cfg, err := config.Load()
 	if err != nil {
-		panic(err)
+		return fmt.Errorf("❌ Failed to load configuration: %v", err)
 	}
 
-	r, err := registry.NewRegistry(cfg)
-	if err != nil {
-		panic(err)
-	}
+	r := registry.NewRegistry(cfg)
 
 	app := NewApp(cfg, r)
-
 	app.Use(NewSwagger(cfg))
-	api := app.Group("/api")
 
-	r.RegisterMiddlewares(app)
-	r.RegisterApiRoutes(api)
+	if err := r.Initialize(app); err != nil {
+		return err
+	}
 
-	app.Listen(fmt.Sprintf(":%d", cfg.Port))
+	// Create error channel to capture server errors
+	serverErr := make(chan error, 1)
+	sigChan := make(chan os.Signal, 1)
+	signal.Notify(sigChan, syscall.SIGINT, syscall.SIGTERM)
+
+	// Start server in a goroutine
+	go func() {
+		if err := app.Listen(fmt.Sprintf(":%d", cfg.Port)); err != nil {
+			serverErr <- err
+		}
+	}()
+
+	select {
+	case err := <-serverErr:
+		return fmt.Errorf("server error: %w", err)
+	case sig := <-sigChan:
+		r.Logger().Info("Received shutdown signal", "signal", sig)
+
+		// Create shutdown context with timeout
+		shutdownCtx, shutdownCancel := context.WithTimeout(context.Background(), 30*time.Second)
+		defer shutdownCancel()
+
+		// Start cleanup in a goroutine
+		done := make(chan struct{})
+		go func() {
+			defer close(done)
+
+			// Cleanup registry (your services, DB connections, etc)
+			r.Cleanup()
+
+			// Graceful shutdown of the fiber app
+			if err := app.ShutdownWithContext(shutdownCtx); err != nil {
+				r.Logger().Error("Error during HTTP server shutdown", "error", err)
+			}
+		}()
+
+		// Wait for cleanup to finish or timeout
+		select {
+		case <-done:
+			r.Logger().Info("Graceful shutdown completed")
+		case <-shutdownCtx.Done():
+			r.Logger().Error("Shutdown timed out")
+		}
+	}
+
+	return nil
 
 }
 
