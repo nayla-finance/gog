@@ -27,7 +27,7 @@ jobs:
 
       - name: Build
         run: |
-          GOOS=linux GOARCH=amd64 go build -o gog ./cmd
+          GOOS=linux GOARCH=amd64 go build -o gog ./cmd/gog
           tar czf ${{ github.event.repository.name }}-${{github.ref_name}}-${{ matrix.target }}.tar.gz gog README.md
 
       - name: Upload release assets
@@ -55,7 +55,7 @@ jobs:
 
       - name: Build
         run: |
-          GOOS=darwin GOARCH=amd64 go build -o gog ./cmd
+          GOOS=darwin GOARCH=amd64 go build -o gog ./cmd/gog
           zip -9r ${{ github.event.repository.name }}-${{github.ref_name}}-${{ matrix.target }}.zip gog README.md
 
       - name: Upload release assets
@@ -82,7 +82,7 @@ jobs:
 
       - name: Build
         run: |
-          GOOS=darwin GOARCH=arm64 go build -o gog ./cmd
+          GOOS=darwin GOARCH=arm64 go build -o gog ./cmd/gog
           zip -9r ${{ github.event.repository.name }}-${{github.ref_name}}-${{ matrix.target }}.zip gog README.md
 
       - name: Upload release assets
