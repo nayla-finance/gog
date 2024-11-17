@@ -5,8 +5,8 @@ import (
 	"os"
 
 	"github.com/mohamedalosaili/gog"
-	new_cmd "github.com/mohamedalosaili/gog/cmd/new"
-	"github.com/mohamedalosaili/gog/cmd/swag"
+	new_cmd "github.com/mohamedalosaili/gog/cmd/gog/new"
+	"github.com/mohamedalosaili/gog/cmd/gog/swag"
 	"github.com/spf13/cobra"
 )
 
