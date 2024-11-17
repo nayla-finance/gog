@@ -1,6 +1,8 @@
 package config
 
 import (
+	"os"
+	"reflect"
 	"strings"
 
 	"github.com/PROJECT_NAME/internal/validator"
@@ -63,6 +65,20 @@ func Load() (*Config, error) {
 	viper.SetDefault("DATABASE_DRIVER", "postgres")
 	viper.SetDefault("DATABASE_MIGRATE_TABLE", "schema_migrations")
 
+	// override values from env if present
+	t := reflect.TypeOf(Config{})
+	for i := 0; i < t.NumField(); i++ {
+		field := t.Field(i)
+		envKey := strings.Split(field.Tag.Get("mapstructure"), ",")[0]
+		if envKey == "" {
+			continue
+		}
+
+		if val := getEnvCaseInsensitive(envKey); val != "" {
+			viper.Set(envKey, val)
+		}
+	}
+
 	var config Config
 	if err := viper.Unmarshal(&config); err != nil {
 		return nil, err
@@ -73,4 +89,20 @@ func Load() (*Config, error) {
 	}
 
 	return &config, nil
+}
+
+func getEnvCaseInsensitive(key string) string {
+	if val := os.Getenv(key); val != "" {
+		return val
+	}
+
+	if val := os.Getenv(strings.ToUpper(key)); val != "" {
+		return val
+	}
+
+	if val := os.Getenv(strings.ToLower(key)); val != "" {
+		return val
+	}
+
+	return ""
 }

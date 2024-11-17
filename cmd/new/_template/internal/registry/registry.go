@@ -10,14 +10,13 @@ import (
 	"github.com/PROJECT_NAME/internal/logger"
 	"github.com/PROJECT_NAME/internal/middleware"
 	"github.com/gofiber/fiber/v2"
-	"github.com/jmoiron/sqlx"
 )
 
 // Ensure that Registry implements RegistryProvider
 var _ RegistryProvider = new(Registry)
 
 type Registry struct {
-	db     *sqlx.DB
+	db     *db.Connection
 	config *config.Config
 	logger logger.Logger
 

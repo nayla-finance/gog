@@ -7,7 +7,6 @@ import (
 	"github.com/PROJECT_NAME/internal/domains/user"
 	"github.com/PROJECT_NAME/internal/errors"
 	"github.com/PROJECT_NAME/internal/logger"
-	"github.com/jmoiron/sqlx"
 )
 
 type RegistryProvider interface {
@@ -31,7 +30,7 @@ type RegistryProvider interface {
 	post.HandlerProvider
 }
 
-func (r *Registry) DB() *sqlx.DB {
+func (r *Registry) DB() *db.Connection {
 	return r.db
 }
 

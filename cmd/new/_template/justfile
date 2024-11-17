@@ -11,6 +11,9 @@ alias b := build
 alias t := test
 alias mn := migrate-new
 alias sw := swagger
+alias db := docker-build
+alias dr := docker-run
+alias dbr := docker-build-run
 
 # Serve the application
 serve:
@@ -43,4 +46,12 @@ reset:
 
 # Generate swagger docs or update them (you need to have gog installed)
 swagger:
-    swag init -g cmd/serve/serve.go
+    gog swag init -g cmd/serve/serve.go
+
+docker-build:
+    docker build -t nayla-installments-mgmt-svc:latest -f devops/Dockerfile .
+
+docker-run:
+    docker run --rm --name nayla-installments-mgmt-svc nayla-installments-mgmt-svc:latest
+
+docker-build-run: docker-build docker-run
