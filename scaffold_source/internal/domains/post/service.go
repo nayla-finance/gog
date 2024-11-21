@@ -10,9 +10,18 @@ import (
 	"github.com/google/uuid"
 )
 
+var _ Service = new(svc)
+
 type (
+	Service interface {
+		CreatePost(ctx context.Context, dto *CreatePostDTO) error
+		GetPostByID(ctx context.Context, id uuid.UUID, post *Post) error
+		GetPostsByUserID(ctx context.Context, userID uuid.UUID, posts *[]Post) error
+		DeletePostsByUserID(ctx context.Context, userID uuid.UUID) error
+	}
+
 	ServiceProvider interface {
-		PostService() *Service
+		PostService() Service
 	}
 
 	serviceDependencies interface {
@@ -23,18 +32,18 @@ type (
 		user.ServiceProvider
 	}
 
-	Service struct {
+	svc struct {
 		d serviceDependencies
 	}
 )
 
-func NewService(d serviceDependencies) *Service {
-	return &Service{d: d}
+func NewService(d serviceDependencies) *svc {
+	return &svc{d: d}
 }
 
-func (s *Service) CreatePost(ctx context.Context, dto *CreatePostDTO) error {
-	user, err := s.d.UserService().GetUserByID(ctx, string(dto.AuthorID))
-	if err != nil {
+func (s *svc) CreatePost(ctx context.Context, dto *CreatePostDTO) error {
+	user := &user.User{}
+	if err := s.d.UserService().GetUserByID(ctx, string(dto.AuthorID), user); err != nil {
 		return err
 	}
 
@@ -49,12 +58,18 @@ func (s *Service) CreatePost(ctx context.Context, dto *CreatePostDTO) error {
 	return nil
 }
 
-func (s *Service) GetPostByID(ctx context.Context, id string) (*Post, error) {
-	post := &Post{ID: uuid.MustParse(id)}
-
-	if err := s.d.PostRepository().getPostByID(ctx, post); err != nil {
-		return nil, err
+func (s *svc) GetPostByID(ctx context.Context, id uuid.UUID, post *Post) error {
+	if err := s.d.PostRepository().getPostByID(ctx, id, post); err != nil {
+		return err
 	}
 
-	return post, nil
+	return nil
+}
+
+func (s *svc) GetPostsByUserID(ctx context.Context, userID uuid.UUID, posts *[]Post) error {
+	return s.d.PostRepository().getPostsByUserID(ctx, userID, posts)
+}
+
+func (s *svc) DeletePostsByUserID(ctx context.Context, userID uuid.UUID) error {
+	return s.d.PostRepository().deletePostsByUserID(ctx, userID)
 }

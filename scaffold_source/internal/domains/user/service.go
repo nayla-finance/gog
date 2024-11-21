@@ -7,27 +7,37 @@ import (
 	"github.com/google/uuid"
 )
 
+var _ Service = new(svc)
+
 type (
+	Service interface {
+		CreateUser(ctx context.Context, dto *CreateUserDTO) error
+		GetUsers(ctx context.Context) ([]User, error)
+		GetUserByID(ctx context.Context, id string, user *User) error
+		UpdateUser(ctx context.Context, id string, dto *UpdateUserDTO) error
+		DeleteUser(ctx context.Context, id string) error
+	}
+
 	ServiceProvider interface {
-		UserService() *Service
+		UserService() Service
 	}
 
 	serviceDependencies interface {
 		RepositoryProvider
 	}
 
-	Service struct {
+	svc struct {
 		d serviceDependencies
 	}
 )
 
-func NewService(d serviceDependencies) *Service {
-	return &Service{
+func NewService(d serviceDependencies) *svc {
+	return &svc{
 		d: d,
 	}
 }
 
-func (s *Service) CreateUser(ctx context.Context, dto *CreateUserDTO) error {
+func (s *svc) CreateUser(ctx context.Context, dto *CreateUserDTO) error {
 	u := &User{
 		ID:        uuid.Must(uuid.NewV7()),
 		FirstName: dto.FirstName,
@@ -41,7 +51,7 @@ func (s *Service) CreateUser(ctx context.Context, dto *CreateUserDTO) error {
 	return s.d.UserRepository().createUser(ctx, u)
 }
 
-func (s *Service) GetUsers(ctx context.Context) ([]User, error) {
+func (s *svc) GetUsers(ctx context.Context) ([]User, error) {
 	users := []User{}
 
 	if err := s.d.UserRepository().getUsers(ctx, &users); err != nil {
@@ -51,17 +61,11 @@ func (s *Service) GetUsers(ctx context.Context) ([]User, error) {
 	return users, nil
 }
 
-func (s *Service) GetUserByID(ctx context.Context, id string) (*User, error) {
-	u := &User{}
-
-	if err := s.d.UserRepository().getUserByID(ctx, id, u); err != nil {
-		return nil, err
-	}
-
-	return u, nil
+func (s *svc) GetUserByID(ctx context.Context, id string, user *User) error {
+	return s.d.UserRepository().getUserByID(ctx, id, user)
 }
 
-func (s *Service) UpdateUser(ctx context.Context, id string, dto *UpdateUserDTO) error {
+func (s *svc) UpdateUser(ctx context.Context, id string, dto *UpdateUserDTO) error {
 	u := &User{}
 
 	if err := s.d.UserRepository().getUserByID(ctx, id, u); err != nil {
@@ -85,6 +89,6 @@ func (s *Service) UpdateUser(ctx context.Context, id string, dto *UpdateUserDTO)
 	return s.d.UserRepository().updateUser(ctx, u)
 }
 
-func (s *Service) DeleteUser(ctx context.Context, id string) error {
+func (s *svc) DeleteUser(ctx context.Context, id string) error {
 	return s.d.UserRepository().deleteUser(ctx, &User{ID: uuid.Must(uuid.Parse(id))})
 }

@@ -8,10 +8,6 @@ import (
 )
 
 type (
-	HandlerProvider interface {
-		UserHandler() *Handler
-	}
-
 	handlerDependencies interface {
 		config.ConfigProvider
 		logger.LoggerProvider
@@ -99,8 +95,8 @@ func (h *Handler) getUser(c *fiber.Ctx) error {
 		return h.d.NewError(errors.ErrBadRequest, "missing user id")
 	}
 
-	user, err := h.d.UserService().GetUserByID(c.Context(), id)
-	if err != nil {
+	user := &User{}
+	if err := h.d.UserService().GetUserByID(c.Context(), id, user); err != nil {
 		return h.d.NewError(errors.ErrInternal, err.Error())
 	}
 

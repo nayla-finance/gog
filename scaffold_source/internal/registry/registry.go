@@ -16,7 +16,7 @@ import (
 var _ RegistryProvider = new(Registry)
 
 type Registry struct {
-	db     *db.Connection
+	db     db.Database
 	config *config.Config
 	logger logger.Logger
 
@@ -24,13 +24,11 @@ type Registry struct {
 	errorHandler *errors.Handler
 
 	// domains
-	userRepository *user.Repository
-	userService    *user.Service
-	userHandler    *user.Handler
+	userRepository user.Repository
+	userService    user.Service
 
-	postRepository *post.Repository
-	postService    *post.Service
-	postHandler    *post.Handler
+	postRepository post.Repository
+	postService    post.Service
 }
 
 func NewRegistry(c *config.Config) *Registry {
@@ -72,10 +70,10 @@ func (r *Registry) RegisterApiRoutes(api fiber.Router) {
 	api.Get("/health", health.NewHealthHandler(r).HealthCheck)
 
 	// user routes
-	r.UserHandler().RegisterRoutes(api)
+	user.NewHandler(r).RegisterRoutes(api)
 
 	// post routes
-	r.PostHandler().RegisterRoutes(api)
+	post.NewHandler(r).RegisterRoutes(api)
 
 	// register other routes
 }

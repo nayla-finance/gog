@@ -7,29 +7,50 @@ import (
 	"github.com/jmoiron/sqlx"
 )
 
+var _ Database = new(db)
+
 type (
+	Database interface {
+		GetConn() *sqlx.DB
+		Transaction(fn func(tx *sqlx.Tx) error) error
+		Close() error
+		Ping() error
+	}
+
 	DBProvider interface {
-		DB() *Connection
+		DB() Database
 	}
 
 	dbDependencies interface {
 		config.ConfigProvider
 	}
 
-	Connection struct {
-		*sqlx.DB
+	db struct {
+		conn *sqlx.DB
 	}
 )
 
-func Connect(d dbDependencies) (*Connection, error) {
+func Connect(d dbDependencies) (*db, error) {
 	dsn := fmt.Sprintf("host=%s user=%s password=%s dbname=%s port=%d sslmode=disable", d.Config().DatabaseHost, d.Config().DatabaseUsername, d.Config().DatabasePassword, d.Config().DatabaseName, d.Config().DatabasePort)
 
-	db, err := sqlx.Connect("postgres", dsn)
+	conn, err := sqlx.Connect("postgres", dsn)
 	if err != nil {
 		return nil, err
 	}
 
-	return &Connection{db}, nil
+	return &db{conn}, nil
+}
+
+func (c *db) Ping() error {
+	return c.conn.Ping()
+}
+
+func (c *db) GetConn() *sqlx.DB {
+	return c.conn
+}
+
+func (c *db) Close() error {
+	return c.conn.Close()
 }
 
 // Transaction executes the given function within a database transaction.
@@ -37,8 +58,8 @@ func Connect(d dbDependencies) (*Connection, error) {
 // If the function executes successfully, the transaction is committed.
 // If a rollback fails after a function error, both errors are returned.
 // Returns any error that occurred during transaction handling.
-func (c *Connection) Transaction(fn func(tx *sqlx.Tx) error) error {
-	tx, err := c.Beginx()
+func (c *db) Transaction(fn func(tx *sqlx.Tx) error) error {
+	tx, err := c.conn.Beginx()
 	if err != nil {
 		return fmt.Errorf("failed to begin transaction: %w", err)
 	}
