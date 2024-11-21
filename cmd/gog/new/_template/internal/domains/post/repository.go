@@ -4,34 +4,53 @@ import (
 	"context"
 
 	"github.com/PROJECT_NAME/internal/db"
+	"github.com/google/uuid"
 )
 
+var _ Repository = new(repo)
+
 type (
+	Repository interface {
+		createPost(ctx context.Context, post *Post) error
+		getPostByID(ctx context.Context, id uuid.UUID, post *Post) error
+		getPostsByUserID(ctx context.Context, userID uuid.UUID, posts *[]Post) error
+		deletePostsByUserID(ctx context.Context, userID uuid.UUID) error
+	}
+
 	RepositoryProvider interface {
-		PostRepository() *Repository
+		PostRepository() Repository
 	}
 
 	repositoryDependencies interface {
 		db.DBProvider
 	}
 
-	Repository struct {
+	repo struct {
 		d repositoryDependencies
 	}
 )
 
-func NewRepository(d repositoryDependencies) *Repository {
-	return &Repository{d: d}
+func NewRepository(d repositoryDependencies) *repo {
+	return &repo{d: d}
 }
 
-func (r *Repository) createPost(ctx context.Context, post *Post) error {
-	if _, err := r.d.DB().NamedExecContext(ctx, "INSERT INTO posts (id, title, content, author_id) VALUES (:title, :content, :author_id)", post); err != nil {
+func (r *repo) createPost(ctx context.Context, post *Post) error {
+	if _, err := r.d.DB().GetConn().NamedExecContext(ctx, "INSERT INTO posts (id, title, content, author_id) VALUES (:title, :content, :author_id)", post); err != nil {
 		return err
 	}
 
 	return nil
 }
 
-func (r *Repository) getPostByID(ctx context.Context, p *Post) error {
-	return r.d.DB().GetContext(ctx, p, "SELECT * FROM posts WHERE id = :id", p)
+func (r *repo) getPostByID(ctx context.Context, id uuid.UUID, p *Post) error {
+	return r.d.DB().GetConn().GetContext(ctx, p, "SELECT * FROM posts WHERE id = $1", id)
+}
+
+func (r *repo) getPostsByUserID(ctx context.Context, userID uuid.UUID, posts *[]Post) error {
+	return r.d.DB().GetConn().SelectContext(ctx, posts, "SELECT * FROM posts WHERE author_id = $1", userID)
+}
+
+func (r *repo) deletePostsByUserID(ctx context.Context, userID uuid.UUID) error {
+	_, err := r.d.DB().GetConn().ExecContext(ctx, "DELETE FROM posts WHERE author_id = $1", userID)
+	return err
 }

@@ -2,23 +2,19 @@ package post
 
 import (
 	"github.com/PROJECT_NAME/internal/config"
-	"github.com/PROJECT_NAME/internal/domains/user"
 	"github.com/PROJECT_NAME/internal/errors"
 	"github.com/PROJECT_NAME/internal/logger"
 	"github.com/gofiber/fiber/v2"
+	"github.com/google/uuid"
 )
 
 type (
-	HandlerProvider interface {
-		PostHandler() *Handler
-	}
-
 	handlerDependencies interface {
 		logger.LoggerProvider
 		config.ConfigProvider
-		user.ServiceProvider
 		ServiceProvider
 		errors.ErrorProvider
+		ServiceProvider
 	}
 
 	Handler struct {
@@ -77,8 +73,8 @@ func (h *Handler) CreatePost(c *fiber.Ctx) error {
 func (h *Handler) GetPost(c *fiber.Ctx) error {
 	id := c.Params("id")
 
-	post, err := h.d.PostService().GetPostByID(c.Context(), id)
-	if err != nil {
+	post := &Post{}
+	if err := h.d.PostService().GetPostByID(c.Context(), uuid.MustParse(id), post); err != nil {
 		return h.d.NewError(errors.ErrInternal, err.Error())
 	}
 

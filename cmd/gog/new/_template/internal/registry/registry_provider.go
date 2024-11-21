@@ -22,15 +22,13 @@ type RegistryProvider interface {
 	// user
 	user.RepositoryProvider
 	user.ServiceProvider
-	user.HandlerProvider
 
 	// post
 	post.RepositoryProvider
 	post.ServiceProvider
-	post.HandlerProvider
 }
 
-func (r *Registry) DB() *db.Connection {
+func (r *Registry) DB() db.Database {
 	return r.db
 }
 
