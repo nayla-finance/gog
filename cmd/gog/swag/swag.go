@@ -332,14 +332,14 @@ func NewSwag() *cobra.Command {
 	}
 
 	swagCmd := &cobra.Command{
-		Use:     "swag",
-		Version: swag.Version,
-		Short:   "Automatically generate RESTful API documentation with Swagger 2.0 for Go.",
+		Use:                "swag",
+		Version:            swag.Version,
+		Short:              "Automatically generate RESTful API documentation with Swagger 2.0 for Go.",
+		DisableFlagParsing: true,
 		RunE: func(cmd *cobra.Command, args []string) error {
-			cliArgs := []string{"swag"}
-			if len(args) > 0 {
-				cliArgs = append(cliArgs, args...)
-			}
+			cliArgs := make([]string, 0, len(args)+1)
+			cliArgs = append(cliArgs, "swag")
+			cliArgs = append(cliArgs, args...)
 			return app.Run(cliArgs)
 		},
 	}
