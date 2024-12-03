@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	"github.com/PROJECT_NAME/internal/config"
+	"github.com/PROJECT_NAME/internal/logger"
 	"github.com/jmoiron/sqlx"
 )
 
@@ -23,6 +24,7 @@ type (
 
 	dbDependencies interface {
 		config.ConfigProvider
+		logger.LoggerProvider
 	}
 
 	db struct {
@@ -31,12 +33,16 @@ type (
 )
 
 func Connect(d dbDependencies) (*db, error) {
-	dsn := fmt.Sprintf("host=%s user=%s password=%s dbname=%s port=%d sslmode=disable", d.Config().DatabaseHost, d.Config().DatabaseUsername, d.Config().DatabasePassword, d.Config().DatabaseName, d.Config().DatabasePort)
+	dsn := fmt.Sprintf("host=%s user=%s password=%s dbname=%s port=%d sslmode=%s", d.Config().DatabaseHost, d.Config().DatabaseUsername, d.Config().DatabasePassword, d.Config().DatabaseName, d.Config().DatabasePort, d.Config().DatabaseSSLMode)
 
+	d.Logger().Debug(fmt.Sprintf("🔄 Connecting to '%s' database with user '%s'...", d.Config().DatabaseName, d.Config().DatabaseUsername))
 	conn, err := sqlx.Connect("postgres", dsn)
 	if err != nil {
+		d.Logger().Error("❌ Failed to connect to database", "error", err)
 		return nil, err
 	}
+
+	d.Logger().Info("✅ Successfully connected to database")
 
 	return &db{conn}, nil
 }

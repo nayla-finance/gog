@@ -20,6 +20,7 @@ func NewMigrateCmd() *cobra.Command {
 		newMigrationUp(),
 		newMigrationNew(),
 		newMigrationStatus(),
+		newMigrationDown(),
 	)
 
 	return cmd
@@ -34,7 +35,7 @@ func setupMigration() (*config.Config, *sql.DB, error) {
 
 	fmt.Println("🔄 Connecting to database...")
 
-	dbString := fmt.Sprintf("user=%s password=%s dbname=%s host=%s port=%d sslmode=disable", cfg.DatabaseUsername, cfg.DatabasePassword, cfg.DatabaseName, cfg.DatabaseHost, cfg.DatabasePort)
+	dbString := fmt.Sprintf("user=%s password=%s dbname=%s host=%s port=%d sslmode=%s", cfg.DatabaseUsername, cfg.DatabasePassword, cfg.DatabaseName, cfg.DatabaseHost, cfg.DatabasePort, cfg.DatabaseSSLMode)
 	db, err := sql.Open(cfg.DatabaseDriver, dbString)
 	if err != nil {
 		return nil, nil, fmt.Errorf("❌ Failed to connect to database: %v", err)
