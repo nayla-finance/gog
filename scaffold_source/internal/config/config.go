@@ -28,13 +28,15 @@ type Config struct {
 
 	ApiKey string `mapstructure:"API_KEY"`
 
-	DatabaseHost          string `mapstructure:"DATABASE_HOST" validate:"required"`
-	DatabasePort          int    `mapstructure:"DATABASE_PORT" validate:"required"`
-	DatabaseName          string `mapstructure:"DATABASE_NAME" validate:"required"`
-	DatabaseUsername      string `mapstructure:"DATABASE_USERNAME" validate:"required"`
-	DatabasePassword      string `mapstructure:"DATABASE_PASSWORD" validate:"required"`
-	DatabaseSynchronize   bool   `mapstructure:"DATABASE_SYNCHRONIZE"`
-	DatabaseSsl           bool   `mapstructure:"DATABASE_SSL"`
+	DatabaseHost        string `mapstructure:"DATABASE_HOST" validate:"required"`
+	DatabasePort        int    `mapstructure:"DATABASE_PORT" validate:"required"`
+	DatabaseName        string `mapstructure:"DATABASE_NAME" validate:"required"`
+	DatabaseUsername    string `mapstructure:"DATABASE_USERNAME" validate:"required"`
+	DatabasePassword    string `mapstructure:"DATABASE_PASSWORD" validate:"required"`
+	DatabaseSynchronize bool   `mapstructure:"DATABASE_SYNCHRONIZE"`
+	DatabaseSsl         bool   `mapstructure:"DATABASE_SSL"`
+	// only "require" (default), "verify-full", "verify-ca", and "disable" supported
+	DatabaseSSLMode       string
 	DatabaseMigrationsDir string `mapstructure:"DATABASE_MIGRATIONS_DIR"`
 	DatabaseDriver        string `mapstructure:"DATABASE_DRIVER"`
 	DatabaseMigrateTable  string `mapstructure:"DATABASE_MIGRATE_TABLE"`
@@ -82,6 +84,12 @@ func Load() (*Config, error) {
 	var config Config
 	if err := viper.Unmarshal(&config); err != nil {
 		return nil, err
+	}
+
+	if config.DatabaseSsl {
+		config.DatabaseSSLMode = "require"
+	} else {
+		config.DatabaseSSLMode = "disable"
 	}
 
 	if err := validator.Validate(config); err != nil {

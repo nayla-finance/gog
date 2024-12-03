@@ -16,6 +16,7 @@ WORKDIR /usr/bin
 
 COPY --from=builder /app/service ./
 COPY --from=builder /app/docs ./docs
+COPY --from=builder /app/migrations ./migrations
 
 EXPOSE 3000
 
