@@ -82,7 +82,7 @@ func (c *db) Transaction(fn func(tx *sqlx.Tx) error) error {
 		if rbErr := tx.Rollback(); rbErr != nil {
 			return fmt.Errorf("tx failed: %v, rollback failed: %v", err, rbErr)
 		}
-		return fmt.Errorf("tx failed: %w", err)
+		return err
 	}
 
 	if err := tx.Commit(); err != nil {
