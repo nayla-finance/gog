@@ -61,16 +61,14 @@ func (h *Handler) errorResponseJSON(ctx *fiber.Ctx, err error) error {
 
 // Map error codes to HTTP status codes
 func (e *ErrorResponse) HttpStatus() int {
-	switch {
-	case e.ErrorCode == ErrUnauthorized:
+	switch e.ErrorCode {
+	case ErrUnauthorized:
 		return fiber.StatusUnauthorized
-	case e.ErrorCode == ErrForbidden:
+	case ErrForbidden:
 		return fiber.StatusForbidden
-	case e.ErrorCode >= 2000 && e.ErrorCode < 3000:
-		return fiber.StatusUnauthorized
-	case e.ErrorCode >= 3000 && e.ErrorCode < 4000:
+	case ErrBadRequest, ErrAccountAlreadyExists, ErrDuplicateEntry, ErrInvalidInput, ErrMissingField:
 		return fiber.StatusBadRequest
-	case e.ErrorCode >= 4000 && e.ErrorCode < 5000:
+	case ErrResourceNotFound:
 		return fiber.StatusNotFound
 	default:
 		return fiber.StatusInternalServerError

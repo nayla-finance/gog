@@ -1,9 +1,7 @@
 package config
 
 import (
-	"os"
 	"reflect"
-	"strings"
 
 	"github.com/PROJECT_NAME/internal/validator"
 	"github.com/spf13/viper"
@@ -45,44 +43,41 @@ type Config struct {
 }
 
 func Load() (*Config, error) {
-	viper.AddConfigPath(".")
-	viper.SetConfigFile(".env")
+	v := viper.New()
 
-	viper.SetEnvKeyReplacer(strings.NewReplacer(".", "__"))
+	v.SetConfigFile(".env")
+	v.AddConfigPath(".")
 
-	// err ignored to allow reading from os env
-	_ = viper.ReadInConfig()
+	v.AutomaticEnv()
 
-	// Load environment variables from the OS
-	viper.AutomaticEnv()
+	// err is ignored to allow reading from os env
+	_ = v.ReadInConfig()
 
-	// Set default values
-	viper.SetDefault("APP_NAME", "Project Name")
-	viper.SetDefault("ENV", "production")
-	viper.SetDefault("PORT", 3000)
-	viper.SetDefault("LOG_LEVEL", "info")
-	viper.SetDefault("READ_TIMEOUT", 60)
-	viper.SetDefault("WRITE_TIMEOUT", 60)
-	viper.SetDefault("DATABASE_MIGRATIONS_DIR", "migrations")
-	viper.SetDefault("DATABASE_DRIVER", "postgres")
-	viper.SetDefault("DATABASE_MIGRATE_TABLE", "schema_migrations")
-
-	// override values from env if present
+	// First, bind all possible environment variables based on struct tags
 	t := reflect.TypeOf(Config{})
 	for i := 0; i < t.NumField(); i++ {
 		field := t.Field(i)
-		envKey := strings.Split(field.Tag.Get("mapstructure"), ",")[0]
-		if envKey == "" {
-			continue
-		}
-
-		if val := getEnvCaseInsensitive(envKey); val != "" {
-			viper.Set(envKey, val)
+		if envKey := field.Tag.Get("mapstructure"); envKey != "" {
+			err := v.BindEnv(envKey)
+			if err != nil {
+				return nil, err
+			}
 		}
 	}
 
+	// Set default values
+	v.SetDefault("APP_NAME", "Project Name")
+	v.SetDefault("ENV", "production")
+	v.SetDefault("PORT", 3000)
+	v.SetDefault("LOG_LEVEL", "info")
+	v.SetDefault("READ_TIMEOUT", 60)
+	v.SetDefault("WRITE_TIMEOUT", 60)
+	v.SetDefault("DATABASE_MIGRATIONS_DIR", "migrations")
+	v.SetDefault("DATABASE_DRIVER", "postgres")
+	v.SetDefault("DATABASE_MIGRATE_TABLE", "schema_migrations")
+
 	var config Config
-	if err := viper.Unmarshal(&config); err != nil {
+	if err := v.Unmarshal(&config); err != nil {
 		return nil, err
 	}
 
@@ -97,20 +92,4 @@ func Load() (*Config, error) {
 	}
 
 	return &config, nil
-}
-
-func getEnvCaseInsensitive(key string) string {
-	if val := os.Getenv(key); val != "" {
-		return val
-	}
-
-	if val := os.Getenv(strings.ToUpper(key)); val != "" {
-		return val
-	}
-
-	if val := os.Getenv(strings.ToLower(key)); val != "" {
-		return val
-	}
-
-	return ""
 }
