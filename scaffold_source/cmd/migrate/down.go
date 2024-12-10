@@ -9,7 +9,7 @@ import (
 )
 
 func newMigrationDown() *cobra.Command {
-	return &cobra.Command{
+	cmd := &cobra.Command{
 		Use:   "down [version]",
 		Short: "Rollback migrations",
 		Long: `Rollback migrations
@@ -19,20 +19,24 @@ migrate down 0 - Rollback all migrations`,
 		Example: "migrate down\nmigrate down 20241108133703\nmigrate down 0",
 		RunE:    runMigrationDown,
 	}
+
+	cmd.Flags().StringP("config", "c", "config.yaml", "config file")
+
+	return cmd
 }
 
 func runMigrationDown(cmd *cobra.Command, args []string) error {
-	cfg, db, err := setupMigration()
+	cfg, db, err := setupMigration(cmd)
 	if err != nil {
 		return fmt.Errorf("❌ Failed to setup migration: %v", err)
 	}
 	defer db.Close()
 
-	goose.SetTableName(cfg.DatabaseMigrateTable)
-	fmt.Printf("🔄 Rolling back migrations from directory: %s\n", cfg.DatabaseMigrationsDir)
+	goose.SetTableName(cfg.Database.MigrateTable)
+	fmt.Printf("🔄 Rolling back migrations from directory: %s\n", cfg.Database.MigrationsDir)
 
 	if len(args) == 0 {
-		if err := goose.Down(db, cfg.DatabaseMigrationsDir); err != nil {
+		if err := goose.Down(db, cfg.Database.MigrationsDir); err != nil {
 			return fmt.Errorf("❌ Rolling back failed: %v", err)
 		}
 	} else {
@@ -41,7 +45,7 @@ func runMigrationDown(cmd *cobra.Command, args []string) error {
 			return fmt.Errorf("❌ Invalid migration version: %v", err)
 		}
 
-		if err := goose.DownTo(db, cfg.DatabaseMigrationsDir, to); err != nil {
+		if err := goose.DownTo(db, cfg.Database.MigrationsDir, to); err != nil {
 			return fmt.Errorf("❌ Rolling back failed: %v", err)
 		}
 	}

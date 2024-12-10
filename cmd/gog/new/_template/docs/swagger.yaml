@@ -37,6 +37,13 @@ definitions:
       timestamp:
         type: string
     type: object
+  health.HealthResponse:
+    properties:
+      message:
+        type: string
+      status:
+        type: string
+    type: object
   post.CreatePostDTO:
     properties:
       author_id:
@@ -111,7 +118,7 @@ host: localhost:3000
 info:
   contact: {}
   description: Your API Description
-  title: Your API Name
+  title: PROJECT_NAME
   version: "1.0"
 paths:
   /health:
@@ -125,10 +132,31 @@ paths:
         "200":
           description: OK
           schema:
-            additionalProperties:
-              type: string
-            type: object
+            $ref: '#/definitions/health.HealthResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/health.HealthResponse'
       summary: Health check
+      tags:
+      - health
+  /health/ready:
+    get:
+      consumes:
+      - application/json
+      description: Check if the application is ready
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/health.HealthResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/health.HealthResponse'
+      summary: Readiness check
       tags:
       - health
   /posts:

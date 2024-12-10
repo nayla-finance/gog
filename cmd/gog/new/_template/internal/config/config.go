@@ -1,7 +1,8 @@
 package config
 
 import (
-	"reflect"
+	"fmt"
+	"strings"
 
 	"github.com/PROJECT_NAME/internal/validator"
 	"github.com/spf13/viper"
@@ -12,79 +13,73 @@ type ConfigProvider interface {
 }
 
 type Config struct {
-	AppName string `mapstructure:"APP_NAME"`
+	App struct {
+		Name         string `mapstructure:"name"`
+		Env          string `mapstructure:"env"`
+		Port         int    `mapstructure:"port"`
+		LogLevel     string `mapstructure:"log_level"`
+		ReadTimeout  int    `mapstructure:"read_timeout"`
+		WriteTimeout int    `mapstructure:"write_timeout"`
+		MaxRetries   int    `mapstructure:"max_retries"`
+	} `mapstructure:"app"`
 
-	Env string `mapstructure:"ENV"`
+	Api struct {
+		Key string `mapstructure:"key" validate:"required"`
+	} `mapstructure:"api"`
 
-	LogLevel string `mapstructure:"LOG_LEVEL"`
-	Port     int    `mapstructure:"PORT"`
-
-	ReadTimeout  int `mapstructure:"READ_TIMEOUT"`
-	WriteTimeout int `mapstructure:"WRITE_TIMEOUT"`
-
-	MaxTries int `mapstructure:"MAX_TRIES"`
-
-	ApiKey string `mapstructure:"API_KEY"`
-
-	DatabaseHost        string `mapstructure:"DATABASE_HOST" validate:"required"`
-	DatabasePort        int    `mapstructure:"DATABASE_PORT" validate:"required"`
-	DatabaseName        string `mapstructure:"DATABASE_NAME" validate:"required"`
-	DatabaseUsername    string `mapstructure:"DATABASE_USERNAME" validate:"required"`
-	DatabasePassword    string `mapstructure:"DATABASE_PASSWORD" validate:"required"`
-	DatabaseSynchronize bool   `mapstructure:"DATABASE_SYNCHRONIZE"`
-	DatabaseSsl         bool   `mapstructure:"DATABASE_SSL"`
-	// only "require" (default), "verify-full", "verify-ca", and "disable" supported
-	DatabaseSSLMode       string
-	DatabaseMigrationsDir string `mapstructure:"DATABASE_MIGRATIONS_DIR"`
-	DatabaseDriver        string `mapstructure:"DATABASE_DRIVER"`
-	DatabaseMigrateTable  string `mapstructure:"DATABASE_MIGRATE_TABLE"`
-
-	// Add more configs here ...
+	Database struct {
+		Host          string `mapstructure:"host" validate:"required"`
+		Port          int    `mapstructure:"port" validate:"required"`
+		Name          string `mapstructure:"name" validate:"required"`
+		Username      string `mapstructure:"username" validate:"required"`
+		Password      string `mapstructure:"password" validate:"required"`
+		Synchronize   bool   `mapstructure:"synchronize"`
+		Ssl           bool   `mapstructure:"ssl"`
+		SSLMode       string // only "require" (default), "verify-full", "verify-ca", and "disable" supported
+		MigrationsDir string `mapstructure:"migrations_dir"`
+		Driver        string `mapstructure:"driver"`
+		MigrateTable  string `mapstructure:"migrate_table"`
+	} `mapstructure:"database"`
 }
 
-func Load() (*Config, error) {
+func Load(configFile string) (*Config, error) {
+	fmt.Println("🔄 Loading configuration from file: ", configFile)
+
 	v := viper.New()
+	// Allow config file to be specified via -c flag
+	v.SetConfigFile(configFile) // Default config file
 
-	v.SetConfigFile(".env")
 	v.AddConfigPath(".")
-
 	v.AutomaticEnv()
 
-	// err is ignored to allow reading from os env
-	_ = v.ReadInConfig()
+	v.SetEnvKeyReplacer(strings.NewReplacer(".", "__"))
 
-	// First, bind all possible environment variables based on struct tags
-	t := reflect.TypeOf(Config{})
-	for i := 0; i < t.NumField(); i++ {
-		field := t.Field(i)
-		if envKey := field.Tag.Get("mapstructure"); envKey != "" {
-			err := v.BindEnv(envKey)
-			if err != nil {
-				return nil, err
-			}
-		}
+	// err is ignored to allow reading from os env
+	if err := v.ReadInConfig(); err != nil {
+		return nil, err
 	}
 
 	// Set default values
-	v.SetDefault("APP_NAME", "Project Name")
-	v.SetDefault("ENV", "production")
-	v.SetDefault("PORT", 3000)
-	v.SetDefault("LOG_LEVEL", "info")
-	v.SetDefault("READ_TIMEOUT", 60)
-	v.SetDefault("WRITE_TIMEOUT", 60)
-	v.SetDefault("DATABASE_MIGRATIONS_DIR", "migrations")
-	v.SetDefault("DATABASE_DRIVER", "postgres")
-	v.SetDefault("DATABASE_MIGRATE_TABLE", "schema_migrations")
+	v.SetDefault("app.name", "PROJECT_NAME")
+	v.SetDefault("app.env", "production")
+	v.SetDefault("app.port", 3000)
+	v.SetDefault("app.log_level", "info")
+	v.SetDefault("app.read_timeout", 60)
+	v.SetDefault("app.write_timeout", 60)
+	v.SetDefault("app.max_retries", 3)
+	v.SetDefault("database.migrations_dir", "migrations")
+	v.SetDefault("database.driver", "postgres")
+	v.SetDefault("database.migrate_table", "schema_migrations")
 
 	var config Config
 	if err := v.Unmarshal(&config); err != nil {
 		return nil, err
 	}
 
-	if config.DatabaseSsl {
-		config.DatabaseSSLMode = "require"
+	if config.Database.Ssl {
+		config.Database.SSLMode = "require"
 	} else {
-		config.DatabaseSSLMode = "disable"
+		config.Database.SSLMode = "disable"
 	}
 
 	if err := validator.Validate(config); err != nil {

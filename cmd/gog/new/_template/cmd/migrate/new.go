@@ -9,7 +9,7 @@ import (
 )
 
 func newMigrationNew() *cobra.Command {
-	return &cobra.Command{
+	cmd := &cobra.Command{
 		Use:                   "new [name]",
 		Short:                 "Create a new migration",
 		DisableFlagsInUseLine: true,
@@ -18,13 +18,18 @@ func newMigrationNew() *cobra.Command {
 				return fmt.Errorf("❌ name is missing")
 			}
 
-			cfg, err := config.Load()
+			configFile, err := cmd.Flags().GetString("config")
+			if err != nil {
+				return fmt.Errorf("❌ Failed to get config file: %v", err)
+			}
+
+			cfg, err := config.Load(configFile)
 			if err != nil {
 				return fmt.Errorf("❌ Failed to load configuration")
 			}
 
 			fmt.Println("🔄 Creating new migration...")
-			if err := goose.Create(nil, cfg.DatabaseMigrationsDir, args[0], "sql"); err != nil {
+			if err := goose.Create(nil, cfg.Database.MigrationsDir, args[0], "sql"); err != nil {
 				return fmt.Errorf("❌ Failed to create migration: %v", err)
 			}
 			fmt.Println("✅ Migration created successfully")
@@ -32,4 +37,8 @@ func newMigrationNew() *cobra.Command {
 			return nil
 		},
 	}
+
+	cmd.Flags().StringP("config", "c", "config.yaml", "config file")
+
+	return cmd
 }

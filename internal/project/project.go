@@ -65,14 +65,14 @@ func (p *Project) Create() error {
 	}
 
 	// create .env from .env.example
-	envExampleFile, err := os.ReadFile(filepath.Join(p.dir, ".env.example"))
+	configExample, err := os.ReadFile(filepath.Join(p.dir, "config.yaml.example"))
 	if err != nil {
 		return fmt.Errorf("❌ Failed to read .env.example file: %w", err)
 	}
 
-	envFile := filepath.Join(p.dir, ".env")
-	if _, err := os.Stat(envFile); os.IsNotExist(err) {
-		os.WriteFile(envFile, envExampleFile, 0644)
+	configFile := filepath.Join(p.dir, "config.yaml")
+	if _, err := os.Stat(configFile); os.IsNotExist(err) {
+		os.WriteFile(configFile, configExample, 0644)
 	}
 
 	// In CreateProject function:
@@ -80,6 +80,9 @@ func (p *Project) Create() error {
 		{emoji: "🚀", name: "Initializing project", command: "go", args: []string{"mod", "init", newModule}},
 		{emoji: "🔍", name: "Tidying project", command: "go", args: []string{"mod", "tidy"}},
 		{emoji: "🔍", name: "Initializing git repository", command: "git", args: []string{"init"}},
+		{emoji: "🔍", name: "Creating pre-commit hooks", command: "touch", args: []string{".git/hooks/pre-commit"}},
+		{emoji: "🔍", name: "Adding pre-commit script", command: "sh", args: []string{"-c", "echo \"go fmt ./...\ngo mod tidy\ngit add .\" > .git/hooks/pre-commit"}},
+		{emoji: "🔍", name: "Finalizing git repository", command: "chmod", args: []string{"+x", ".git/hooks/pre-commit"}},
 	}
 
 	if err := p.runCommands(steps); err != nil {

@@ -18,7 +18,7 @@ type (
 )
 
 func NewLogger(d loggerDependencies) Logger {
-	switch d.Config().LogLevel {
+	switch d.Config().App.LogLevel {
 	case "debug":
 		log.SetLevel(log.LevelDebug)
 	case "trace":
