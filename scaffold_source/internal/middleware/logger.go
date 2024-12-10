@@ -22,10 +22,9 @@ func NewLoggingMiddleware(d loggingMiddlewareDependencies) *LoggingMiddleware {
 }
 
 func (m *LoggingMiddleware) Handle(c *fiber.Ctx) error {
-	m.d.Logger().Info(fmt.Sprintf("A new request path: %s query: %s status: %d method: %s request_id: %s ip: %s user_agent: %s content_length: %d",
+	m.d.Logger().Info(fmt.Sprintf("A new request path: %s query: %s method: %s request_id: %s ip: %s user_agent: %s content_length: %d",
 		c.Path(),
 		string(c.Request().URI().QueryString()),
-		c.Response().StatusCode(),
 		c.Method(),
 		c.Locals("RequestID"),
 		c.IP(),

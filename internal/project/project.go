@@ -65,14 +65,14 @@ func (p *Project) Create() error {
 	}
 
 	// create .env from .env.example
-	envExampleFile, err := os.ReadFile(filepath.Join(p.dir, ".env.example"))
+	configExample, err := os.ReadFile(filepath.Join(p.dir, "config.yaml.example"))
 	if err != nil {
 		return fmt.Errorf("❌ Failed to read .env.example file: %w", err)
 	}
 
-	envFile := filepath.Join(p.dir, ".env")
-	if _, err := os.Stat(envFile); os.IsNotExist(err) {
-		os.WriteFile(envFile, envExampleFile, 0644)
+	configFile := filepath.Join(p.dir, "config.yaml")
+	if _, err := os.Stat(configFile); os.IsNotExist(err) {
+		os.WriteFile(configFile, configExample, 0644)
 	}
 
 	// In CreateProject function:

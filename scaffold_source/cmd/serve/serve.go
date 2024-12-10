@@ -17,25 +17,32 @@ import (
 )
 
 func NewServeCmd() *cobra.Command {
-	return &cobra.Command{
+	cmd := &cobra.Command{
 		Use:   "serve",
 		Short: "Start the server",
 		RunE:  Run,
 	}
+
+	cmd.Flags().StringP("config", "c", "config.yaml", "config file")
+
+	return cmd
 }
 
-// @title						PROJECT_NAME
-// @version					1.0
-// @description				Your API Description
-// @host						localhost:3000
+// @Title						PROJECT_NAME
+// @Version					    1.0
+// @Description				    API for PROJECT_NAME
 // @BasePath					/api
-// @securityDefinitions.apikey	Bearer
-// @in							header
-// @name						Authorization
-// @description				JWT Authorization header using the Bearer scheme. Example: "Bearer {token}"
-// @security					Bearer
+// @SecurityDefinitions.apikey	ApiKey
+// @In							header
+// @Name						X-API-KEY
+// @Description			    	API key for authentication
 func Run(cmd *cobra.Command, args []string) error {
-	cfg, err := config.Load()
+	configFile, err := cmd.Flags().GetString("config")
+	if err != nil {
+		return fmt.Errorf("❌ Failed to get config file: %v", err)
+	}
+
+	cfg, err := config.Load(configFile)
 	if err != nil {
 		return fmt.Errorf("❌ Failed to load configuration: %v", err)
 	}
@@ -56,7 +63,7 @@ func Run(cmd *cobra.Command, args []string) error {
 
 	// Start server in a goroutine
 	go func() {
-		if err := app.Listen(fmt.Sprintf(":%d", cfg.Port)); err != nil {
+		if err := app.Listen(fmt.Sprintf(":%d", cfg.App.Port)); err != nil {
 			serverErr <- err
 		}
 	}()
@@ -100,11 +107,11 @@ func Run(cmd *cobra.Command, args []string) error {
 
 func NewApp(cfg *config.Config, r *registry.Registry) *fiber.App {
 	return fiber.New(fiber.Config{
-		AppName:      cfg.AppName,
+		AppName:      cfg.App.Name,
 		ErrorHandler: r.ErrorHandler().Handle,
 		// Handle timeouts
-		ReadTimeout:  time.Duration(cfg.ReadTimeout) * time.Second,
-		WriteTimeout: time.Duration(cfg.WriteTimeout) * time.Second,
+		ReadTimeout:  time.Duration(cfg.App.ReadTimeout) * time.Second,
+		WriteTimeout: time.Duration(cfg.App.WriteTimeout) * time.Second,
 
 		// print all routes with their method, path and handler
 		EnablePrintRoutes: true,
@@ -113,13 +120,13 @@ func NewApp(cfg *config.Config, r *registry.Registry) *fiber.App {
 
 func NewSwagger(cfg *config.Config) fiber.Handler {
 	cacheAge := 0
-	if cfg.Env == "development" {
+	if cfg.App.Env == "development" {
 		cacheAge = 0
 	}
 
 	return swagger.New(swagger.Config{
 		BasePath: "/api",
-		Title:    cfg.AppName,
+		Title:    cfg.App.Name,
 		Path:     "docs",
 		FilePath: "./docs/swagger.json",
 		CacheAge: cacheAge,

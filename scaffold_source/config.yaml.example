@@ -1,0 +1,23 @@
+## Environment Variables
+
+app:
+  name: PROJECT_NAME
+  env: production
+  port: 3022
+  log_level: info
+  read_timeout: 60
+  write_timeout: 60
+
+api:
+  key: my-api-key
+
+database:
+  host: localhost
+  port: 5460
+  name: mydatabase
+  username: myusername
+  password: mypassword
+  synchronize: false
+  ssl: false
+  migrations_dir: migrations
+  driver: postgres

@@ -31,7 +31,7 @@ func (m *AuthMiddleware) Handle(c *fiber.Ctx) error {
 		return c.Next()
 	}
 
-	if c.Get("X-API-KEY") != m.d.Config().ApiKey {
+	if c.Get("X-API-KEY") != m.d.Config().Api.Key {
 		return m.d.NewError(errors.ErrUnauthorized, "Missing or invalid API key")
 	}
 
@@ -41,6 +41,7 @@ func (m *AuthMiddleware) Handle(c *fiber.Ctx) error {
 func (m *AuthMiddleware) isPublicRoute(path string) bool {
 	publicPaths := []string{
 		"/api/health",
+		"/api/health/ready",
 		"/api/docs",
 	}
 
