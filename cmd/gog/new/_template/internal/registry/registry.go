@@ -52,9 +52,18 @@ func (r *Registry) Initialize(app *fiber.App) error {
 	return nil
 }
 
-func (r *Registry) Cleanup() {
-	r.db.Close()
+func (r *Registry) Cleanup() error {
+	r.Logger().Debug("🧹 Cleaning up registry")
+
+	r.Logger().Info("🔌 Closing database connection")
+	if err := r.db.Close(); err != nil {
+		return err
+	}
+
+	r.Logger().Info("✅ Registry cleaned up successfully")
 	// call cleanup funcs (e.g. unsubscribe listeners, etc.)
+
+	return nil
 }
 
 func (r *Registry) RegisterMiddlewares(app *fiber.App) {
@@ -62,12 +71,13 @@ func (r *Registry) RegisterMiddlewares(app *fiber.App) {
 	app.Use(middleware.NewRequestIDMiddleware().Handle)
 	app.Use(middleware.NewLoggingMiddleware(r).Handle)
 	app.Use(middleware.NewAuthMiddleware(r).Handle)
+	app.Use(middleware.NewRequestTimingMiddleware(r).Handle)
 	// register other middlewares
 }
 
 func (r *Registry) RegisterApiRoutes(api fiber.Router) {
 	// health check
-	api.Get("/health", health.NewHealthHandler(r).HealthCheck)
+	health.NewHealthHandler(r).RegisterRoutes(api)
 
 	// user routes
 	user.NewHandler(r).RegisterRoutes(api)
