@@ -10,8 +10,7 @@
       "request": "launch",
       "mode": "auto",
       "program": "${workspaceFolder}",
-      "envFile": "${workspaceFolder}/.env",
-      "args": ["serve"]
+      "args": ["serve", "-c", "${workspaceFolder}/config.yaml"]
     }
   ]
 }

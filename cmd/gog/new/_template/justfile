@@ -17,12 +17,12 @@ alias dbr := docker-build-run
 
 # Serve the application
 serve:
-    go run . serve
+    go run . serve -c config.yaml
 
 
 # Run migrations 
 migrate:
-    go run . migrate up
+    go run . migrate up -c config.yaml
 
 
 # Build the application
@@ -35,7 +35,7 @@ test:
 
 # Create new migration
 migrate-new name:
-    go run . migrate new {{name}}
+    go run . migrate new {{name}} -c config.yaml
 
 # Reset the database by stopping containers, recreating them, and running migrations
 reset:

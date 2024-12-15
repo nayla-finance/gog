@@ -81,7 +81,7 @@ func (p *Project) Create() error {
 		{emoji: "🔍", name: "Tidying project", command: "go", args: []string{"mod", "tidy"}},
 		{emoji: "🔍", name: "Initializing git repository", command: "git", args: []string{"init"}},
 		{emoji: "🔍", name: "Creating pre-commit hooks", command: "touch", args: []string{".git/hooks/pre-commit"}},
-		{emoji: "🔍", name: "Adding pre-commit script", command: "sh", args: []string{"-c", "echo \"go fmt ./...\ngo mod tidy\ngit add .\" > .git/hooks/pre-commit"}},
+		{emoji: "🔍", name: "Adding pre-commit script", command: "sh", args: []string{"-c", "echo \"go fmt ./...\ngo mod tidy\" > .git/hooks/pre-commit"}},
 		{emoji: "🔍", name: "Finalizing git repository", command: "chmod", args: []string{"+x", ".git/hooks/pre-commit"}},
 	}
 

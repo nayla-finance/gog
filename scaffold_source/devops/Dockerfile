@@ -20,4 +20,4 @@ COPY --from=builder /app/migrations ./migrations
 
 EXPOSE 3000
 
-ENTRYPOINT ["./service", "serve"]
+ENTRYPOINT ["./service"]
