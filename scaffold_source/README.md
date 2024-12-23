@@ -1,5 +1,5 @@
 <p align="center">
-  <a href="#" target="blank">
+  <pre align="center">
           ,_---~~~~~----._         
    _,,_,*^____      _____``*g*\"*, 
   / __/ /'     ^.  /      \ ^@q   f 
@@ -11,8 +11,9 @@
    ]             ~ ~             |  
    |                            |   
     |                           |   
-  </a>
+  </pre>
 </p>
+
 
 <p align="center">
   A powerful <a href="https://go.dev" target="_blank">Go</a> project scaffolding tool for generating production-ready service templates.
