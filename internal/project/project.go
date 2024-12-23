@@ -83,6 +83,7 @@ func (p *Project) Create() error {
 		{emoji: "🔍", name: "Creating pre-commit hooks", command: "touch", args: []string{".git/hooks/pre-commit"}},
 		{emoji: "🔍", name: "Adding pre-commit script", command: "sh", args: []string{"-c", "echo \"go fmt ./...\ngo mod tidy\" > .git/hooks/pre-commit"}},
 		{emoji: "🔍", name: "Finalizing git repository", command: "chmod", args: []string{"+x", ".git/hooks/pre-commit"}},
+		{emoji: "🔍", name: "Formatting project", command: "go", args: []string{"fmt", "./..."}},
 	}
 
 	if err := p.runCommands(steps); err != nil {

@@ -9,6 +9,8 @@ import (
 	"github.com/PROJECT_NAME/internal/errors"
 	"github.com/PROJECT_NAME/internal/logger"
 	"github.com/PROJECT_NAME/internal/middleware"
+	"github.com/PROJECT_NAME/internal/nats"
+	"github.com/PROJECT_NAME/internal/utils/retry"
 	"github.com/gofiber/fiber/v2"
 )
 
@@ -22,6 +24,11 @@ type Registry struct {
 
 	// errors
 	errorHandler *errors.Handler
+
+	retry *retry.Retry
+
+	natsService         nats.Service
+	consumerNameBuilder *nats.ConsumerNameBuilder
 
 	// domains
 	userRepository user.Repository
@@ -37,11 +44,8 @@ func NewRegistry(c *config.Config) *Registry {
 	}
 }
 
-func (r *Registry) Initialize(app *fiber.App) error {
-	var err error
-
-	r.db, err = db.Connect(r)
-	if err != nil {
+func (r *Registry) InitializeWithFiber(app *fiber.App) error {
+	if err := r.Initialize(); err != nil {
 		return err
 	}
 
@@ -52,11 +56,32 @@ func (r *Registry) Initialize(app *fiber.App) error {
 	return nil
 }
 
+func (r *Registry) Initialize() error {
+	var err error
+
+	r.db, err = db.Connect(r)
+	if err != nil {
+		return err
+	}
+
+	r.natsService, err = nats.NewService(r)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
 func (r *Registry) Cleanup() error {
 	r.Logger().Debug("🧹 Cleaning up registry")
 
 	r.Logger().Info("🔌 Closing database connection")
 	if err := r.db.Close(); err != nil {
+		return err
+	}
+
+	r.Logger().Info("🔌 Closing NATS connection")
+	if err := r.natsService.Cleanup(); err != nil {
 		return err
 	}
 
@@ -71,7 +96,6 @@ func (r *Registry) RegisterMiddlewares(app *fiber.App) {
 	app.Use(middleware.NewRequestIDMiddleware().Handle)
 	app.Use(middleware.NewLoggingMiddleware(r).Handle)
 	app.Use(middleware.NewAuthMiddleware(r).Handle)
-	app.Use(middleware.NewRequestTimingMiddleware(r).Handle)
 	// register other middlewares
 }
 

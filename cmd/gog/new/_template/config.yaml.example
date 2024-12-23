@@ -7,6 +7,8 @@ app:
   log_level: info
   read_timeout: 60
   write_timeout: 60
+  max_retries: 3
+  retry_delay: 500ms
 
 api:
   key: my-api-key
@@ -21,3 +23,11 @@ database:
   ssl: false
   migrations_dir: migrations
   driver: postgres
+
+nats:
+  servers: nats://localhost:4222
+  client_name: PROJECT_NAME
+  creds_path: secrets/PROJECT_NAME_user.creds
+  default_stream_name: PROJECT_NAME
+  default_stream_subjects:
+    - "PROJECT_NAME.>"

@@ -49,9 +49,12 @@ swagger:
     gog swag init -g cmd/serve/serve.go
 
 docker-build:
-    docker build -t nayla-installments-mgmt-svc:latest -f devops/Dockerfile .
+    docker build -t PROJECT_NAME-image:latest -f devops/Dockerfile .
 
 docker-run:
-    docker run --rm --name nayla-installments-mgmt-svc nayla-installments-mgmt-svc:latest
+    docker run --rm --name PROJECT_NAME PROJECT_NAME-image:latest
 
 docker-build-run: docker-build docker-run
+
+migrate-down:
+    go run . migrate down

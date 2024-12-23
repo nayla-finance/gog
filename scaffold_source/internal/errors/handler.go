@@ -1,6 +1,7 @@
 package errors
 
 import (
+	"fmt"
 	"time"
 
 	"github.com/PROJECT_NAME/internal/logger"
@@ -55,6 +56,13 @@ func (h *Handler) errorResponseJSON(ctx *fiber.Ctx, err error) error {
 	er.Path = ctx.Path()
 	er.Timestamp = time.Now().Format(time.RFC3339)
 	er.StatusCode = er.HttpStatus()
+
+	h.d.Logger().Error(fmt.Sprintf("🔥🔥🔥 Error - path: %s request_id: %s status: %d error: %s",
+		ctx.Path(),
+		ctx.Locals("RequestID"),
+		er.StatusCode,
+		err.Error(),
+	))
 
 	return ctx.Status(er.StatusCode).JSON(er)
 }

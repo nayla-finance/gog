@@ -3,6 +3,7 @@ package config
 import (
 	"fmt"
 	"strings"
+	"time"
 
 	"github.com/PROJECT_NAME/internal/validator"
 	"github.com/spf13/viper"
@@ -12,20 +13,17 @@ type ConfigProvider interface {
 	Config() *Config
 }
 
-type Config struct {
+type (
 	App struct {
-		Name         string `mapstructure:"name"`
-		Env          string `mapstructure:"env"`
-		Port         int    `mapstructure:"port"`
-		LogLevel     string `mapstructure:"log_level"`
-		ReadTimeout  int    `mapstructure:"read_timeout"`
-		WriteTimeout int    `mapstructure:"write_timeout"`
-		MaxRetries   int    `mapstructure:"max_retries"`
-	} `mapstructure:"app"`
-
-	Api struct {
-		Key string `mapstructure:"key" validate:"required"`
-	} `mapstructure:"api"`
+		Name         string        `mapstructure:"name"`
+		Env          string        `mapstructure:"env"`
+		Port         int           `mapstructure:"port"`
+		LogLevel     string        `mapstructure:"log_level"`
+		ReadTimeout  int           `mapstructure:"read_timeout"`
+		WriteTimeout int           `mapstructure:"write_timeout"`
+		MaxRetries   int           `mapstructure:"max_retries"`
+		RetryDelay   time.Duration `mapstructure:"retry_delay"`
+	}
 
 	Database struct {
 		Host          string `mapstructure:"host" validate:"required"`
@@ -39,8 +37,27 @@ type Config struct {
 		MigrationsDir string `mapstructure:"migrations_dir"`
 		Driver        string `mapstructure:"driver"`
 		MigrateTable  string `mapstructure:"migrate_table"`
-	} `mapstructure:"database"`
-}
+	}
+
+	Api struct {
+		Key string `mapstructure:"key" validate:"required"`
+	}
+
+	Nats struct {
+		Servers               string   `mapstructure:"servers" validate:"required"`
+		ClientName            string   `mapstructure:"client_name" validate:"required"`
+		CredsPath             string   `mapstructure:"creds_path" validate:"required"`
+		DefaultStreamName     string   `mapstructure:"default_stream_name" validate:"required"`
+		DefaultStreamSubjects []string `mapstructure:"default_stream_subjects" validate:"required"`
+	}
+
+	Config struct {
+		App      App      `mapstructure:"app"`
+		Api      Api      `mapstructure:"api"`
+		Database Database `mapstructure:"database"`
+		Nats     Nats     `mapstructure:"nats"`
+	}
+)
 
 func Load(configFile string) (*Config, error) {
 	fmt.Println("🔄 Loading configuration from file: ", configFile)

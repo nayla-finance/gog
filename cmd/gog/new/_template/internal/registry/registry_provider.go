@@ -7,6 +7,8 @@ import (
 	"github.com/PROJECT_NAME/internal/domains/user"
 	"github.com/PROJECT_NAME/internal/errors"
 	"github.com/PROJECT_NAME/internal/logger"
+	"github.com/PROJECT_NAME/internal/nats"
+	"github.com/PROJECT_NAME/internal/utils/retry"
 )
 
 type RegistryProvider interface {
@@ -17,6 +19,11 @@ type RegistryProvider interface {
 	// errors
 	errors.ErrorProvider
 	errors.ErrorHandlerProvider
+
+	nats.ServiceProvider
+	nats.ConsumerNameBuilderProvider
+
+	retry.RetryProvider
 
 	// domains
 	// user
@@ -57,4 +64,12 @@ func (r *Registry) ErrorHandler() *errors.Handler {
 	}
 
 	return r.errorHandler
+}
+
+func (r *Registry) Retry() *retry.Retry {
+	if r.retry == nil {
+		r.retry = retry.NewRetry(r)
+	}
+
+	return r.retry
 }
