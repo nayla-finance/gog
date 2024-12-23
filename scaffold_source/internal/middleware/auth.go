@@ -27,12 +27,15 @@ func NewAuthMiddleware(d authMiddlewareDependencies) *AuthMiddleware {
 
 func (m *AuthMiddleware) Handle(c *fiber.Ctx) error {
 	if m.isPublicRoute(c.Path()) {
-		m.d.Logger().Info("public route skipping auth middleware")
+		m.d.Logger().Debug("public route skipping auth middleware")
 		return c.Next()
 	}
 
-	if c.Get("X-API-KEY") != m.d.Config().Api.Key {
-		return m.d.NewError(errors.ErrUnauthorized, "Missing or invalid API key")
+	token := strings.TrimPrefix(c.Get("Authorization"), "Bearer ")
+
+	if token != m.d.Config().Api.Key {
+		m.d.Logger().Error("missing or invalid API key in Authorization header, Got token: ", token)
+		return m.d.NewError(errors.ErrUnauthorized, "Missing or invalid API key in Authorization header")
 	}
 
 	return c.Next()

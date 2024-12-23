@@ -52,7 +52,7 @@ func Run(cmd *cobra.Command, args []string) error {
 	app := NewApp(cfg, r)
 	app.Use(NewSwagger(cfg))
 
-	if err := r.Initialize(app); err != nil {
+	if err := r.InitializeWithFiber(app); err != nil {
 		return err
 	}
 
