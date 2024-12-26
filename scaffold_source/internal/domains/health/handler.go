@@ -27,6 +27,7 @@ func NewHealthHandler(d healthHandlerDependencies) *HealthHandler {
 }
 
 func (h *HealthHandler) RegisterRoutes(r fiber.Router) {
+	r.Get("/ping", h.Ping)
 	r.Get("/health", h.HealthCheck)
 	r.Get("/health/ready", h.ReadinessCheck)
 }
@@ -75,6 +76,20 @@ func (h *HealthHandler) ReadinessCheck(c *fiber.Ctx) error {
 		})
 	}
 
+	return c.JSON(HealthResponse{
+		Status: "ok",
+	})
+}
+
+// @Summary      Ping
+// @Description  Tests connectivity by pinging the application, requires authentication to verify caller identity
+// @Tags         health
+// @Accept       json
+// @Produce      json
+// @Success      200  {object}  HealthResponse
+// @Failure      500  {object}  HealthResponse
+// @Router       /ping [get]
+func (h *HealthHandler) Ping(c *fiber.Ctx) error {
 	return c.JSON(HealthResponse{
 		Status: "ok",
 	})

@@ -114,10 +114,9 @@ definitions:
       updatedAt:
         type: string
     type: object
-host: localhost:3000
 info:
   contact: {}
-  description: Your API Description
+  description: API for PROJECT_NAME
   title: PROJECT_NAME
   version: "1.0"
 paths:
@@ -157,6 +156,26 @@ paths:
           schema:
             $ref: '#/definitions/health.HealthResponse'
       summary: Readiness check
+      tags:
+      - health
+  /ping:
+    get:
+      consumes:
+      - application/json
+      description: Tests connectivity by pinging the application, requires authentication
+        to verify caller identity
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/health.HealthResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/health.HealthResponse'
+      summary: Ping
       tags:
       - health
   /posts:
@@ -368,10 +387,9 @@ paths:
       tags:
       - users
 securityDefinitions:
-  Bearer:
-    description: 'JWT Authorization header using the Bearer scheme. Example: "Bearer
-      {token}"'
+  ApiKey:
+    description: API key for authentication
     in: header
-    name: Authorization
+    name: X-API-KEY
     type: apiKey
 swagger: "2.0"

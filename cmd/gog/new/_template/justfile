@@ -14,6 +14,8 @@ alias sw := swagger
 alias db := docker-build
 alias dr := docker-run
 alias dbr := docker-build-run
+alias gc := generate-creds
+alias rc := regenerate-creds
 
 # Serve the application
 serve:
@@ -56,5 +58,12 @@ docker-run:
 
 docker-build-run: docker-build docker-run
 
+generate-creds:
+    nsc generate creds --name PROJECT_NAME_user --account PROJECT_NAME_account --output-file secrets/PROJECT_NAME_user.creds
+
+regenerate-creds:
+    rm secrets/PROJECT_NAME_user.creds
+    nsc generate creds --name PROJECT_NAME_user --account PROJECT_NAME_account --output-file secrets/PROJECT_NAME_user.creds
+
 migrate-down:
-    go run . migrate down
+    go run . migrate down -c config.yaml

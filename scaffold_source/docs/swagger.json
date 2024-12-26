@@ -1,12 +1,11 @@
 {
     "swagger": "2.0",
     "info": {
-        "description": "Your API Description",
+        "description": "API for PROJECT_NAME",
         "title": "PROJECT_NAME",
         "contact": {},
         "version": "1.0"
     },
-    "host": "localhost:3000",
     "basePath": "/api",
     "paths": {
         "/health": {
@@ -51,6 +50,35 @@
                     "health"
                 ],
                 "summary": "Readiness check",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/health.HealthResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/health.HealthResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/ping": {
+            "get": {
+                "description": "Tests connectivity by pinging the application, requires authentication to verify caller identity",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "health"
+                ],
+                "summary": "Ping",
                 "responses": {
                     "200": {
                         "description": "OK",
@@ -549,10 +577,10 @@
         }
     },
     "securityDefinitions": {
-        "Bearer": {
-            "description": "JWT Authorization header using the Bearer scheme. Example: \"Bearer {token}\"",
+        "ApiKey": {
+            "description": "API key for authentication",
             "type": "apiKey",
-            "name": "Authorization",
+            "name": "X-API-KEY",
             "in": "header"
         }
     }
