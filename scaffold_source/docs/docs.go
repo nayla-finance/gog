@@ -73,6 +73,35 @@ const docTemplate = `{
                 }
             }
         },
+        "/ping": {
+            "get": {
+                "description": "Tests connectivity by pinging the application, requires authentication to verify caller identity",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "health"
+                ],
+                "summary": "Ping",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/health.HealthResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/health.HealthResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/posts": {
             "post": {
                 "description": "Create a new post with the provided data",
@@ -555,10 +584,10 @@ const docTemplate = `{
         }
     },
     "securityDefinitions": {
-        "Bearer": {
-            "description": "JWT Authorization header using the Bearer scheme. Example: \"Bearer {token}\"",
+        "ApiKey": {
+            "description": "API key for authentication",
             "type": "apiKey",
-            "name": "Authorization",
+            "name": "X-API-KEY",
             "in": "header"
         }
     }
@@ -567,11 +596,11 @@ const docTemplate = `{
 // SwaggerInfo holds exported Swagger Info so clients can modify it
 var SwaggerInfo = &swag.Spec{
 	Version:          "1.0",
-	Host:             "localhost:3000",
+	Host:             "",
 	BasePath:         "/api",
 	Schemes:          []string{},
 	Title:            "PROJECT_NAME",
-	Description:      "Your API Description",
+	Description:      "API for PROJECT_NAME",
 	InfoInstanceName: "swagger",
 	SwaggerTemplate:  docTemplate,
 	LeftDelim:        "{{",
