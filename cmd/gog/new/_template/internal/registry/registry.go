@@ -49,8 +49,9 @@ func (r *Registry) InitializeWithFiber(app *fiber.App) error {
 		return err
 	}
 
-	r.RegisterMiddlewares(app)
+	r.RegisterPreMiddlewares(app)
 	r.RegisterApiRoutes(app.Group("/api"))
+	r.RegisterPostMiddlewares(app)
 	// register other "things" (e.g. listeners, consumers, etc.)
 
 	return nil
@@ -91,11 +92,11 @@ func (r *Registry) Cleanup() error {
 	return nil
 }
 
-func (r *Registry) RegisterMiddlewares(app *fiber.App) {
+func (r *Registry) RegisterPreMiddlewares(app *fiber.App) {
 	// Global middlewares apply to all routes
 	app.Use(middleware.NewRequestIDMiddleware().Handle)
 	app.Use(middleware.NewLoggingMiddleware(r).Handle)
-	app.Use(middleware.NewAuthMiddleware(r).Handle)
+	// app.Use(middleware.NewAuthMiddleware(r).Handle)
 	// register other middlewares
 }
 
@@ -110,4 +111,8 @@ func (r *Registry) RegisterApiRoutes(api fiber.Router) {
 	post.NewHandler(r).RegisterRoutes(api)
 
 	// register other routes
+}
+
+func (r *Registry) RegisterPostMiddlewares(app *fiber.App) {
+	app.Use(middleware.NewNotFoundMiddleware(r).Handle)
 }
