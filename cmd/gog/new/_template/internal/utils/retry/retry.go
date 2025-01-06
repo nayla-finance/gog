@@ -35,7 +35,7 @@ func (r *Retry) Do(operation func() error, name string) error {
 		if err := operation(); err != nil {
 			lastErr = err
 
-			if attempts >= r.d.Config().App.MaxRetries {
+			if attempts > r.d.Config().App.MaxRetries {
 				r.d.Logger().Error("Operation ", name, " failed after max retries", " error ", lastErr)
 				return lastErr
 			}
