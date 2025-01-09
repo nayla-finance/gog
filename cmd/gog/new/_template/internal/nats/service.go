@@ -7,7 +7,7 @@ import (
 	"github.com/PROJECT_NAME/internal/config"
 	"github.com/PROJECT_NAME/internal/errors"
 	"github.com/PROJECT_NAME/internal/logger"
-	"github.com/PROJECT_NAME/internal/utils/retry"
+	"github.com/PROJECT_NAME/internal/utils"
 	"github.com/nats-io/nats.go"
 	"github.com/nats-io/nats.go/jetstream"
 )
@@ -30,7 +30,7 @@ type (
 		config.ConfigProvider
 		logger.LoggerProvider
 		errors.ErrorProvider
-		retry.RetryProvider
+		utils.RetryProvider
 	}
 
 	svc struct {

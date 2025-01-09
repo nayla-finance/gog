@@ -6,6 +6,7 @@ import (
 	"github.com/PROJECT_NAME/internal/config"
 	"github.com/PROJECT_NAME/internal/errors"
 	"github.com/PROJECT_NAME/internal/logger"
+	"github.com/PROJECT_NAME/internal/utils"
 	"github.com/gofiber/fiber/v2"
 )
 
@@ -48,14 +49,9 @@ func (m *AuthMiddleware) Handle(c *fiber.Ctx) error {
 }
 
 func (m *AuthMiddleware) isPublicRoute(path string) bool {
-	publicPaths := []string{
-		"/api/health",
-		"/api/health/ready",
-		"/api/docs",
-	}
-
-	for _, p := range publicPaths {
-		if strings.HasPrefix(path, p) {
+	path = utils.NormalizePath(path)
+	for _, p := range m.d.Config().Api.PublicRoutes {
+		if path == utils.NormalizePath(p) {
 			return true
 		}
 	}

@@ -12,6 +12,10 @@ app:
 
 api:
   key: my-api-key
+  public_routes:
+    - "/api/health"
+    - "/api/health/ready"
+    - "/api/docs"
 
 database:
   host: localhost
