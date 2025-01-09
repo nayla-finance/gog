@@ -31,10 +31,16 @@ func (m *AuthMiddleware) Handle(c *fiber.Ctx) error {
 		return c.Next()
 	}
 
-	token := strings.TrimPrefix(c.Get("Authorization"), "Bearer ")
+	authorization := strings.Split(c.Get("Authorization"), " ")
+	if len(authorization) != 2 {
+		m.d.Logger().Error("missing or invalid API key in Authorization header, Got token: ", authorization)
+		return m.d.NewError(errors.ErrUnauthorized, "Authorization header must be in format 'Bearer <token>'")
+	}
+
+	token := authorization[1]
 
 	if token != m.d.Config().Api.Key {
-		m.d.Logger().Error("missing or invalid API key in Authorization header, Got token: ", token)
+		m.d.Logger().Error("missing or invalid API key in Authorization header, Got token: ", authorization)
 		return m.d.NewError(errors.ErrUnauthorized, "Missing or invalid API key in Authorization header")
 	}
 
