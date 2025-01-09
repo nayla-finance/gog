@@ -10,7 +10,7 @@ import (
 	"github.com/PROJECT_NAME/internal/logger"
 	"github.com/PROJECT_NAME/internal/middleware"
 	"github.com/PROJECT_NAME/internal/nats"
-	"github.com/PROJECT_NAME/internal/utils/retry"
+	"github.com/PROJECT_NAME/internal/utils"
 	"github.com/gofiber/fiber/v2"
 )
 
@@ -25,7 +25,7 @@ type Registry struct {
 	// errors
 	errorHandler *errors.Handler
 
-	retry *retry.Retry
+	retry *utils.Retry
 
 	natsService         nats.Service
 	consumerNameBuilder *nats.ConsumerNameBuilder
@@ -96,7 +96,7 @@ func (r *Registry) RegisterPreMiddlewares(app *fiber.App) {
 	// Global middlewares apply to all routes
 	app.Use(middleware.NewRequestIDMiddleware().Handle)
 	app.Use(middleware.NewLoggingMiddleware(r).Handle)
-	// app.Use(middleware.NewAuthMiddleware(r).Handle)
+	app.Use(middleware.NewAuthMiddleware(r).Handle)
 	// register other middlewares
 }
 

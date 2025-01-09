@@ -40,7 +40,8 @@ type (
 	}
 
 	Api struct {
-		Key string `mapstructure:"key" validate:"required"`
+		Key          string   `mapstructure:"key" validate:"required"`
+		PublicRoutes []string `mapstructure:"public_routes"`
 	}
 
 	Nats struct {
@@ -87,6 +88,7 @@ func Load(configFile string) (*Config, error) {
 	v.SetDefault("database.migrations_dir", "migrations")
 	v.SetDefault("database.driver", "postgres")
 	v.SetDefault("database.migrate_table", "schema_migrations")
+	v.SetDefault("api.public_routes", []string{"/api/health", "/api/health/ready", "/api/docs"})
 
 	var config Config
 	if err := v.Unmarshal(&config); err != nil {
