@@ -52,11 +52,17 @@ type (
 		DefaultStreamSubjects []string `mapstructure:"default_stream_subjects" validate:"required"`
 	}
 
+	Sentry struct {
+		Dsn              string  `mapstructure:"dsn" validate:"required"`
+		TracesSampleRate float64 `mapstructure:"traces_sample_rate" validate:"required"`
+	}
+
 	Config struct {
 		App      App      `mapstructure:"app"`
 		Api      Api      `mapstructure:"api"`
 		Database Database `mapstructure:"database"`
 		Nats     Nats     `mapstructure:"nats"`
+		Sentry   Sentry   `mapstructure:"sentry"`
 	}
 )
 

@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/PROJECT_NAME/internal/logger"
+	"github.com/getsentry/sentry-go"
 	"github.com/gofiber/fiber/v2"
 )
 
@@ -37,6 +38,8 @@ func NewErrorHandler(d handlerDependencies) *Handler {
 }
 
 func (h *Handler) Handle(c *fiber.Ctx, err error) error {
+	sentry.CaptureException(err)
+
 	return h.errorResponseJSON(c, err)
 }
 
