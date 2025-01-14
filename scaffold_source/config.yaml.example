@@ -35,3 +35,7 @@ nats:
   default_stream_name: PROJECT_NAME
   default_stream_subjects:
     - "PROJECT_NAME.>"
+
+sentry:
+  dsn: https://PROJECT_NAME@sentry.io/PROJECT_NAME
+  traces_sample_rate: 1.0

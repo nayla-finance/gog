@@ -11,6 +11,8 @@ import (
 	"github.com/PROJECT_NAME/internal/middleware"
 	"github.com/PROJECT_NAME/internal/nats"
 	"github.com/PROJECT_NAME/internal/utils"
+	"github.com/getsentry/sentry-go"
+	sentryfiber "github.com/getsentry/sentry-go/fiber"
 	"github.com/gofiber/fiber/v2"
 )
 
@@ -45,7 +47,20 @@ func NewRegistry(c *config.Config) *Registry {
 }
 
 func (r *Registry) InitializeWithFiber(app *fiber.App) error {
+	sentry.Init(sentry.ClientOptions{
+		Dsn:              r.config.Sentry.Dsn,
+		TracesSampleRate: r.config.Sentry.TracesSampleRate,
+	})
+
+	sentryHandler := sentryfiber.New(sentryfiber.Options{
+		Repanic:         true,
+		WaitForDelivery: true,
+	})
+
+	app.Use(sentryHandler)
+
 	if err := r.Initialize(); err != nil {
+		sentry.CaptureException(err)
 		return err
 	}
 
