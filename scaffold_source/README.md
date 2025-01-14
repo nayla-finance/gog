@@ -44,7 +44,7 @@ GoG (Go Generator) is a CLI tool that helps you quickly scaffold production-read
 
 ```bash
 # Install GoG CLI
-go install github.com/mohamedalosaili/gog/cmd/gog@latest
+go install github.com/nayla-finance/gog/cmd/gog@latest
 ```
 
 ## Usage

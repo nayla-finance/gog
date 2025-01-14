@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/mohamedalosaili/gog/internal/project"
+	"github.com/nayla-finance/gog/internal/project"
 	"github.com/spf13/cobra"
 )
 

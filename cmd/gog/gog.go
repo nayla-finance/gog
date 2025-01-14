@@ -4,9 +4,9 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/mohamedalosaili/gog"
-	new_cmd "github.com/mohamedalosaili/gog/cmd/gog/new"
-	"github.com/mohamedalosaili/gog/cmd/gog/swag"
+	"github.com/nayla-finance/gog"
+	new_cmd "github.com/nayla-finance/gog/cmd/gog/new"
+	"github.com/nayla-finance/gog/cmd/gog/swag"
 	"github.com/spf13/cobra"
 )
 

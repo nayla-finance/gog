@@ -1,4 +1,4 @@
-module github.com/mohamedalosaili/gog
+module github.com/nayla-finance/gog
 
 go 1.23.0
 
