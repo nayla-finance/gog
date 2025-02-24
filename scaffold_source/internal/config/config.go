@@ -46,12 +46,19 @@ type (
 		PublicRoutes []string `mapstructure:"public_routes"`
 	}
 
+	NatsConsumer struct {
+		MaxDeliver             int             `mapstructure:"max_deliver"`
+		BackoffDurations       []time.Duration `mapstructure:"backoff_durations"`
+		DefaultBackoffDuration time.Duration   `mapstructure:"default_backoff_duration"`
+	}
+
 	Nats struct {
-		Servers               string   `mapstructure:"servers" validate:"required"`
-		ClientName            string   `mapstructure:"client_name" validate:"required"`
-		CredsPath             string   `mapstructure:"creds_path" validate:"required"`
-		DefaultStreamName     string   `mapstructure:"default_stream_name" validate:"required"`
-		DefaultStreamSubjects []string `mapstructure:"default_stream_subjects" validate:"required"`
+		Servers               string       `mapstructure:"servers" validate:"required"`
+		ClientName            string       `mapstructure:"client_name" validate:"required"`
+		CredsPath             string       `mapstructure:"creds_path" validate:"required"`
+		DefaultStreamName     string       `mapstructure:"default_stream_name" validate:"required"`
+		DefaultStreamSubjects []string     `mapstructure:"default_stream_subjects" validate:"required"`
+		Consumer              NatsConsumer `mapstructure:"consumer"`
 	}
 
 	Sentry struct {
@@ -98,6 +105,9 @@ func Load(configFile string) (*Config, error) {
 	v.SetDefault("database.driver", "postgres")
 	v.SetDefault("database.migrate_table", "schema_migrations")
 	v.SetDefault("api.public_routes", []string{"/api/health", "/api/health/ready", "/api/docs"})
+	v.SetDefault("nats.consumer.max_deliver", 72)
+	v.SetDefault("nats.consumer.backoff_durations", []time.Duration{30 * time.Second, time.Minute, 5 * time.Minute, 15 * time.Minute})
+	v.SetDefault("nats.consumer.default_backoff_duration", time.Hour)
 
 	var config Config
 	if err := v.Unmarshal(&config); err != nil {

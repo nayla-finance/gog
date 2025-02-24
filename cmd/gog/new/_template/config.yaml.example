@@ -36,6 +36,14 @@ nats:
   default_stream_name: PROJECT_NAME
   default_stream_subjects:
     - "PROJECT_NAME.>"
+  consumer:
+    max_deliver: 72
+    backoff_durations:
+      - 30s
+      - 1m
+      - 5m
+      - 15m
+    default_backoff_duration: 1h
 
 sentry:
   dsn: https://PROJECT_NAME@sentry.io/PROJECT_NAME
