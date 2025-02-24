@@ -5,6 +5,7 @@ app:
   env: production
   port: 3022
   log_level: info
+  timezone: Asia/Riyadh
   read_timeout: 60
   write_timeout: 60
   max_retries: 3

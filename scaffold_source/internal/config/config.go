@@ -2,6 +2,7 @@ package config
 
 import (
 	"fmt"
+	"os"
 	"strings"
 	"time"
 
@@ -23,6 +24,7 @@ type (
 		WriteTimeout int           `mapstructure:"write_timeout"`
 		MaxRetries   int           `mapstructure:"max_retries"`
 		RetryDelay   time.Duration `mapstructure:"retry_delay"`
+		Timezone     string        `mapstructure:"timezone"`
 	}
 
 	Database struct {
@@ -88,6 +90,7 @@ func Load(configFile string) (*Config, error) {
 	v.SetDefault("app.env", "production")
 	v.SetDefault("app.port", 3000)
 	v.SetDefault("app.log_level", "info")
+	v.SetDefault("app.timezone", "Asia/Riyadh")
 	v.SetDefault("app.read_timeout", 60)
 	v.SetDefault("app.write_timeout", 60)
 	v.SetDefault("app.max_retries", 3)
@@ -110,6 +113,10 @@ func Load(configFile string) (*Config, error) {
 	if err := validator.Validate(config); err != nil {
 		return nil, err
 	}
+
+	// 🚨 This only works if os.Setenv is called before any time.Now() is called
+	// issue: https://stackoverflow.com/questions/54363451/setting-timezone-globally-in-golang
+	os.Setenv("TZ", config.App.Timezone)
 
 	return &config, nil
 }
