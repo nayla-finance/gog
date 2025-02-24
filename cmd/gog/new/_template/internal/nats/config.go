@@ -44,14 +44,20 @@ func LoadConfig(d configDependencies) *NatsConfig {
 		},
 	}
 
+	backoffDurations := d.Config().Nats.Consumer.BackoffDurations
+	// NOTE(🚨): max deliver is required to be > length of backoff values
+	for len(backoffDurations) < d.Config().Nats.Consumer.MaxDeliver-1 {
+		backoffDurations = append(backoffDurations, d.Config().Nats.Consumer.DefaultBackoffDuration)
+	}
+
 	cfg.DefaultConsumerConfig = jetstream.ConsumerConfig{
 		AckPolicy:     jetstream.AckExplicitPolicy,
 		AckWait:       30 * time.Second,
 		DeliverPolicy: jetstream.DeliverNewPolicy,
-		MaxDeliver:    5,
+		MaxDeliver:    d.Config().Nats.Consumer.MaxDeliver,
 		// MaxAckPending: 1000, // use default 1000
 		ReplayPolicy: jetstream.ReplayInstantPolicy,
-		BackOff:      []time.Duration{30 * time.Second, 5 * time.Minute, 1 * time.Hour, 12 * time.Hour},
+		BackOff:      backoffDurations,
 	}
 
 	return cfg
