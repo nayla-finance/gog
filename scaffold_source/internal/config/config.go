@@ -6,6 +6,9 @@ import (
 	"strings"
 	"time"
 
+	// Embed timezone data
+	_ "time/tzdata"
+
 	"github.com/PROJECT_NAME/internal/validator"
 	"github.com/spf13/viper"
 )
@@ -126,6 +129,8 @@ func Load(configFile string) (*Config, error) {
 
 	// 🚨 This only works if os.Setenv is called before any time.Now() is called
 	// issue: https://stackoverflow.com/questions/54363451/setting-timezone-globally-in-golang
+	// Make sure to embed timezone data in the binary to be able to load the desired timezone
+	// Add _ "time/tzdata" at the top of the file to embed timezone data
 	os.Setenv("TZ", config.App.Timezone)
 
 	return &config, nil
