@@ -3,6 +3,7 @@ package health
 import (
 	"github.com/PROJECT_NAME/internal/db"
 	"github.com/PROJECT_NAME/internal/logger"
+	"github.com/PROJECT_NAME/internal/nats"
 	"github.com/gofiber/fiber/v2"
 )
 
@@ -10,6 +11,7 @@ type (
 	healthHandlerDependencies interface {
 		logger.LoggerProvider
 		db.DBProvider
+		nats.ServiceProvider
 	}
 
 	HealthHandler struct {
@@ -41,16 +43,22 @@ func (h *HealthHandler) RegisterRoutes(r fiber.Router) {
 // @Failure      500  {object}  HealthResponse
 // @Router       /health [get]
 func (h *HealthHandler) HealthCheck(c *fiber.Ctx) error {
-	h.d.Logger().Info("Health check")
-
-	// Check critical dependencies are running (e.g. database)
-
 	if err := h.d.DB().Ping(); err != nil {
+		h.d.Logger().Errorw("❌ Database connection is not healthy", "error", err)
 		return c.Status(fiber.StatusInternalServerError).JSON(HealthResponse{
 			Status:  "error",
 			Message: err.Error(),
 		})
 	}
+
+	if !h.d.NatsService().HealthCheck() {
+		return c.Status(fiber.StatusInternalServerError).JSON(HealthResponse{
+			Status:  "error",
+			Message: "NATS connection is not healthy",
+		})
+	}
+
+	h.d.Logger().Info("Health check passed ✅")
 
 	return c.JSON(HealthResponse{
 		Status: "ok",
@@ -75,6 +83,15 @@ func (h *HealthHandler) ReadinessCheck(c *fiber.Ctx) error {
 			Message: err.Error(),
 		})
 	}
+
+	if !h.d.NatsService().HealthCheck() {
+		return c.Status(fiber.StatusInternalServerError).JSON(HealthResponse{
+			Status:  "error",
+			Message: "NATS connection is not healthy",
+		})
+	}
+
+	h.d.Logger().Info("Readiness check passed ✅")
 
 	return c.JSON(HealthResponse{
 		Status: "ok",
