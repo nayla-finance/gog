@@ -10,11 +10,14 @@ import (
 func (s *svc) Setup() error {
 	s.d.Logger().Debug("🔄 Setting up NATS connection...")
 
-	nc, err := nats.Connect(s.d.Config().Nats.Servers, nats.UserCredentials(s.d.Config().Nats.CredsPath))
+	nc, err := nats.Connect(s.d.Config().Nats.Servers, s.cfg.ConnectionOptions...)
 	if err != nil {
 		s.d.Logger().Error("❌ Failed to connect to NATS", "error", err)
 		return err
 	}
+
+	s.d.Logger().Debugf("NATS connection options: \n%+v \n\n", nc.Opts)
+
 	s.nc = nc
 	s.d.Logger().Debug("Successfully connected to NATS ✅")
 

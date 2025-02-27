@@ -4,6 +4,8 @@ import (
 	"time"
 
 	"github.com/PROJECT_NAME/internal/config"
+	"github.com/PROJECT_NAME/internal/logger"
+	"github.com/google/uuid"
 	"github.com/nats-io/nats.go"
 	"github.com/nats-io/nats.go/jetstream"
 )
@@ -11,10 +13,11 @@ import (
 type (
 	configDependencies interface {
 		config.ConfigProvider
+		logger.LoggerProvider
 	}
 
 	NatsConfig struct {
-		ConnectionOptions     nats.Option
+		ConnectionOptions     []nats.Option
 		Streams               []jetstream.StreamConfig
 		DefaultConsumerConfig jetstream.ConsumerConfig
 	}
@@ -23,10 +26,23 @@ type (
 func LoadConfig(d configDependencies) *NatsConfig {
 	cfg := &NatsConfig{}
 
-	cfg.ConnectionOptions = func(o *nats.Options) error {
-		o.Name = d.Config().Nats.ClientName
-		o.AllowReconnect = true
-		return nil
+	cfg.ConnectionOptions = []nats.Option{
+		nats.UserCredentials(d.Config().Nats.CredsPath),
+		nats.DisconnectErrHandler(func(nc *nats.Conn, err error) {
+			d.Logger().Errorf("❌ NATS connection error: %s", err)
+		}),
+		nats.ClosedHandler(func(nc *nats.Conn) {
+			d.Logger().Info("✅ NATS connection closed")
+		}),
+		nats.ReconnectHandler(func(nc *nats.Conn) {
+			d.Logger().Infof("🔄 Reconnected [%s]", nc.ConnectedUrl())
+		}),
+		func(o *nats.Options) error {
+			// provide a unique name for each connection
+			o.Name = d.Config().Nats.ClientName + "_" + uuid.New().String()
+			o.AllowReconnect = true
+			return nil
+		},
 	}
 
 	cfg.Streams = []jetstream.StreamConfig{
