@@ -1,3 +1,3 @@
 package gog
 
-const Version = "1.4.11"
+const Version = "1.4.12"
