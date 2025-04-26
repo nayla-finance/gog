@@ -80,6 +80,7 @@ func (r *Registry) InitializeWithFiber(app *fiber.App) error {
 	sentry.Init(sentry.ClientOptions{
 		Dsn:              r.config.Sentry.Dsn,
 		TracesSampleRate: r.config.Sentry.TracesSampleRate,
+		Environment:      r.config.App.Env,
 	})
 
 	sentryHandler := sentryfiber.New(sentryfiber.Options{

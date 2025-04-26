@@ -117,6 +117,8 @@ func Load(configFile string) (*Config, error) {
 	v.SetDefault("nats.consumer.max_deliver", 72)
 	v.SetDefault("nats.consumer.backoff_durations", []time.Duration{30 * time.Second, time.Minute, 5 * time.Minute, 15 * time.Minute})
 	v.SetDefault("nats.consumer.default_backoff_duration", time.Hour)
+	v.SetDefault("open_telemetry.enabled", false)
+	v.SetDefault("open_telemetry.excluded_routes", []string{"/api/health", "/api/health/ready", "/api/docs", "/metrics"})
 
 	var config Config
 	if err := v.Unmarshal(&config); err != nil {
