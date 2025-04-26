@@ -3,16 +3,16 @@ package userpost
 import (
 	"context"
 
-	"github.com/PROJECT_NAME/internal/domains/post"
-	"github.com/PROJECT_NAME/internal/domains/user"
+	"github.com/PROJECT_NAME/internal/domains/interfaces"
+	"github.com/PROJECT_NAME/internal/domains/model"
 )
 
 var _ Service = new(svc)
 
 type (
 	UserPost struct {
-		User  user.User
-		Posts []post.Post
+		User  model.User
+		Posts []model.Post
 	}
 
 	Service interface {
@@ -21,8 +21,8 @@ type (
 	}
 
 	serviceDependencies interface {
-		user.ServiceProvider
-		post.ServiceProvider
+		interfaces.UserServiceProvider
+		interfaces.PostServiceProvider
 	}
 
 	svc struct {
@@ -37,14 +37,14 @@ func NewService(d serviceDependencies) *svc {
 }
 
 func (s *svc) GetUserPosts(ctx context.Context, userID string) (*UserPost, error) {
-	user := &user.User{}
+	user := &model.User{}
 
 	err := s.d.UserService().GetUserByID(ctx, userID, user)
 	if err != nil {
 		return nil, err
 	}
 
-	posts := []post.Post{}
+	posts := []model.Post{}
 	if err := s.d.PostService().GetPostsByUserID(ctx, user.ID, &posts); err != nil {
 		return nil, err
 	}
@@ -56,7 +56,7 @@ func (s *svc) GetUserPosts(ctx context.Context, userID string) (*UserPost, error
 }
 
 func (s *svc) DeleteUserPosts(ctx context.Context, userID string) error {
-	user := &user.User{}
+	user := &model.User{}
 	if err := s.d.UserService().GetUserByID(ctx, userID, user); err != nil {
 		return err
 	}

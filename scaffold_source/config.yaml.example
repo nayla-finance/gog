@@ -48,3 +48,11 @@ nats:
 sentry:
   dsn: https://PROJECT_NAME@sentry.io/PROJECT_NAME
   traces_sample_rate: 1.0
+
+open_telemetry:
+  enabled: false
+  excluded_routes:
+    - /api/health
+    - /api/health/ready
+    - /api/docs
+    - /metrics

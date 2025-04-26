@@ -7,6 +7,7 @@ import (
 	"github.com/PROJECT_NAME/internal/config"
 	"github.com/PROJECT_NAME/internal/db"
 	"github.com/PROJECT_NAME/internal/domains/health"
+	"github.com/PROJECT_NAME/internal/domains/interfaces"
 	"github.com/PROJECT_NAME/internal/domains/post"
 	"github.com/PROJECT_NAME/internal/domains/user"
 	"github.com/PROJECT_NAME/internal/errors"
@@ -18,6 +19,8 @@ import (
 	sentryfiber "github.com/getsentry/sentry-go/fiber"
 	"github.com/gofiber/contrib/otelfiber"
 	"github.com/gofiber/fiber/v2"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
+	"github.com/valyala/fasthttp/fasthttpadaptor"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/exporters/otlp/otlptrace"
@@ -46,10 +49,10 @@ type Registry struct {
 
 	// domains
 	userRepository user.Repository
-	userService    user.Service
+	userService    interfaces.UserService
 
 	postRepository post.Repository
-	postService    post.Service
+	postService    interfaces.PostService
 
 	// otel
 	tp  *sdktrace.TracerProvider
@@ -87,15 +90,25 @@ func (r *Registry) InitializeWithFiber(app *fiber.App) error {
 	app.Use(sentryHandler)
 
 	var err error
-	r.tp, r.exp, err = r.initializeOpenTelemetry(ctx)
-	if err != nil {
-		return err
-	}
+	if r.Config().OpenTelemetry.Enabled {
+		r.tp, r.exp, err = r.initializeOpenTelemetry(ctx)
+		if err != nil {
+			return err
+		}
 
-	// skip health check requests
-	app.Use(otelfiber.Middleware(otelfiber.WithNext(func(c *fiber.Ctx) bool {
-		return c.Path() == "/api/health" || c.Path() == "/api/health/ready"
-	})))
+		// skip health check requests
+		app.Use(otelfiber.Middleware(otelfiber.WithNext(func(c *fiber.Ctx) bool {
+			for _, route := range r.Config().OpenTelemetry.ExcludedRoutes {
+				if c.Path() == route {
+					return true
+				}
+			}
+
+			return false
+		})))
+
+		serveMetrics(app)
+	}
 
 	if err := r.Initialize(); err != nil {
 		sentry.CaptureException(err)
@@ -139,12 +152,16 @@ func (r *Registry) Cleanup() error {
 		return err
 	}
 
-	if err := r.tp.Shutdown(context.Background()); err != nil {
-		r.Logger().Error("Error shutting down tracer provider: %v", err)
+	if r.tp != nil {
+		if err := r.tp.Shutdown(context.Background()); err != nil {
+			r.Logger().Error("Error shutting down tracer provider: %v", err)
+		}
 	}
 
-	if err := r.exp.Shutdown(context.Background()); err != nil {
-		r.Logger().Error("Error shutting down exporter: %v", err)
+	if r.exp != nil {
+		if err := r.exp.Shutdown(context.Background()); err != nil {
+			r.Logger().Error("Error shutting down exporter: %v", err)
+		}
 	}
 
 	r.Logger().Info("✅ Registry cleaned up successfully")
@@ -180,7 +197,7 @@ func (r *Registry) RegisterPostMiddlewares(app *fiber.App) {
 
 func (r *Registry) initializeOpenTelemetry(ctx context.Context) (*sdktrace.TracerProvider, *otlptrace.Exporter, error) {
 	// It'll uses these envs to get the endpoint and service name
-	// OTEL_SERVICE_NAME=PROJECT_NAME
+	// OTEL_SERVICE_NAME=nayla-manual-payment-svc
 	// OTEL_EXPORTER_OTLP_ENDPOINT=https://mymonitor.nayla.tech:443
 	// OTEL_EXPORTER_OTLP_HEADERS=x-special-key=your_key_here
 
@@ -222,4 +239,12 @@ func (r *Registry) initializeOpenTelemetry(ctx context.Context) (*sdktrace.Trace
 	)
 
 	return tp, exp, nil
+}
+
+func serveMetrics(app *fiber.App) {
+	h := fasthttpadaptor.NewFastHTTPHandler(promhttp.Handler())
+	app.Get("/metrics", func(c *fiber.Ctx) error {
+		h(c.Context())
+		return nil
+	})
 }

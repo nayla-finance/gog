@@ -69,12 +69,18 @@ type (
 		TracesSampleRate float64 `mapstructure:"traces_sample_rate" validate:"required"`
 	}
 
+	OpenTelemetry struct {
+		Enabled        bool     `mapstructure:"enabled"`
+		ExcludedRoutes []string `mapstructure:"excluded_routes"`
+	}
+
 	Config struct {
-		App      App      `mapstructure:"app"`
-		Api      Api      `mapstructure:"api"`
-		Database Database `mapstructure:"database"`
-		Nats     Nats     `mapstructure:"nats"`
-		Sentry   Sentry   `mapstructure:"sentry"`
+		App           App           `mapstructure:"app"`
+		Api           Api           `mapstructure:"api"`
+		Database      Database      `mapstructure:"database"`
+		Nats          Nats          `mapstructure:"nats"`
+		Sentry        Sentry        `mapstructure:"sentry"`
+		OpenTelemetry OpenTelemetry `mapstructure:"open_telemetry"`
 	}
 )
 

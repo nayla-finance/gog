@@ -3,6 +3,7 @@ package registry
 import (
 	"github.com/PROJECT_NAME/internal/config"
 	"github.com/PROJECT_NAME/internal/db"
+	"github.com/PROJECT_NAME/internal/domains/interfaces"
 	"github.com/PROJECT_NAME/internal/domains/post"
 	"github.com/PROJECT_NAME/internal/domains/user"
 	"github.com/PROJECT_NAME/internal/errors"
@@ -28,11 +29,11 @@ type RegistryProvider interface {
 	// domains
 	// user
 	user.RepositoryProvider
-	user.ServiceProvider
+	interfaces.UserServiceProvider
 
 	// post
 	post.RepositoryProvider
-	post.ServiceProvider
+	interfaces.PostServiceProvider
 }
 
 func (r *Registry) DB() db.Database {

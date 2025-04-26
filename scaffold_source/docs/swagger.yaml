@@ -44,7 +44,7 @@ definitions:
       status:
         type: string
     type: object
-  post.CreatePostDTO:
+  model.CreatePostDTO:
     properties:
       author_id:
         type: string
@@ -57,22 +57,7 @@ definitions:
     - content
     - title
     type: object
-  post.Post:
-    properties:
-      author_id:
-        type: string
-      content:
-        type: string
-      created_at:
-        type: string
-      id:
-        type: string
-      title:
-        type: string
-      updated_at:
-        type: string
-    type: object
-  user.CreateUserDTO:
+  model.CreateUserDTO:
     properties:
       email:
         type: string
@@ -88,7 +73,24 @@ definitions:
     - lastName
     - phone
     type: object
-  user.UpdateUserDTO:
+  model.Post:
+    properties:
+      author:
+        $ref: '#/definitions/model.User'
+      author_id:
+        type: string
+      content:
+        type: string
+      created_at:
+        type: string
+      id:
+        type: string
+      title:
+        type: string
+      updated_at:
+        type: string
+    type: object
+  model.UpdateUserDTO:
     properties:
       firstName:
         type: string
@@ -97,7 +99,7 @@ definitions:
       phone:
         type: string
     type: object
-  user.User:
+  model.User:
     properties:
       createdAt:
         type: string
@@ -111,6 +113,10 @@ definitions:
         type: string
       phone:
         type: string
+      posts:
+        items:
+          $ref: '#/definitions/model.Post'
+        type: array
       updatedAt:
         type: string
     type: object
@@ -189,7 +195,7 @@ paths:
         name: post
         required: true
         schema:
-          $ref: '#/definitions/post.CreatePostDTO'
+          $ref: '#/definitions/model.CreatePostDTO'
       produces:
       - application/json
       responses:
@@ -223,7 +229,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/post.Post'
+            $ref: '#/definitions/model.Post'
         "400":
           description: Bad Request
           schema:
@@ -251,7 +257,7 @@ paths:
           description: OK
           schema:
             items:
-              $ref: '#/definitions/user.User'
+              $ref: '#/definitions/model.User'
             type: array
         "500":
           description: Internal Server Error
@@ -270,7 +276,7 @@ paths:
         name: user
         required: true
         schema:
-          $ref: '#/definitions/user.CreateUserDTO'
+          $ref: '#/definitions/model.CreateUserDTO'
       produces:
       - application/json
       responses:
@@ -334,7 +340,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/user.User'
+            $ref: '#/definitions/model.User'
         "400":
           description: Bad Request
           schema:
@@ -365,7 +371,7 @@ paths:
         name: user
         required: true
         schema:
-          $ref: '#/definitions/user.UpdateUserDTO'
+          $ref: '#/definitions/model.UpdateUserDTO'
       produces:
       - application/json
       responses:
@@ -388,8 +394,8 @@ paths:
       - users
 securityDefinitions:
   ApiKey:
-    description: API key for authentication
+    description: Bearer token for authentication
     in: header
-    name: X-API-KEY
+    name: Authorization
     type: apiKey
 swagger: "2.0"

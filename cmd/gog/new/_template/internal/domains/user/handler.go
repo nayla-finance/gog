@@ -2,6 +2,8 @@ package user
 
 import (
 	"github.com/PROJECT_NAME/internal/config"
+	"github.com/PROJECT_NAME/internal/domains/interfaces"
+	"github.com/PROJECT_NAME/internal/domains/model"
 	"github.com/PROJECT_NAME/internal/errors"
 	"github.com/PROJECT_NAME/internal/logger"
 	"github.com/gofiber/fiber/v2"
@@ -11,7 +13,7 @@ type (
 	handlerDependencies interface {
 		config.ConfigProvider
 		logger.LoggerProvider
-		ServiceProvider
+		interfaces.UserServiceProvider
 		errors.ErrorProvider
 	}
 
@@ -39,7 +41,7 @@ func (h *Handler) RegisterRoutes(api fiber.Router) {
 // @Tags			users
 // @Accept			json
 // @Produce		json
-// @Success		200	{array}		User
+// @Success		200	{array}		model.User
 // @Failure		500	{object}	errors.ErrorResponse
 // @Router			/users [get]
 func (h *Handler) getUsers(c *fiber.Ctx) error {
@@ -56,13 +58,13 @@ func (h *Handler) getUsers(c *fiber.Ctx) error {
 // @Tags			users
 // @Accept			json
 // @Produce		json
-// @Param			user	body	CreateUserDTO	true	"User data"
+// @Param			user	body	model.CreateUserDTO	true	"User data"
 // @Success		201		"Created"
 // @Failure		400		{object}	errors.ErrorResponse
 // @Failure		500		{object}	errors.ErrorResponse
 // @Router			/users [post]
 func (h *Handler) createUser(c *fiber.Ctx) error {
-	dto := &CreateUserDTO{}
+	dto := &model.CreateUserDTO{}
 	if err := c.BodyParser(dto); err != nil {
 		return h.d.NewError(errors.ErrInternal, err.Error())
 	}
@@ -84,7 +86,7 @@ func (h *Handler) createUser(c *fiber.Ctx) error {
 // @Accept			json
 // @Produce		json
 // @Param			id	path		string	true	"User ID"
-// @Success		200	{object}	User
+// @Success		200	{object}	model.User
 // @Failure		400	{object}	errors.ErrorResponse
 // @Failure		404	{object}	errors.ErrorResponse
 // @Failure		500	{object}	errors.ErrorResponse
@@ -95,13 +97,9 @@ func (h *Handler) getUser(c *fiber.Ctx) error {
 		return h.d.NewError(errors.ErrBadRequest, "missing user id")
 	}
 
-	user := &User{}
+	var user *model.User
 	if err := h.d.UserService().GetUserByID(c.Context(), id, user); err != nil {
 		return h.d.NewError(errors.ErrInternal, err.Error())
-	}
-
-	if user == nil {
-		return h.d.NewError(errors.ErrResourceNotFound, "user not found")
 	}
 
 	return c.JSON(user)
@@ -113,7 +111,7 @@ func (h *Handler) getUser(c *fiber.Ctx) error {
 // @Accept			json
 // @Produce		json
 // @Param			id		path	string			true	"User ID"
-// @Param			user	body	UpdateUserDTO	true	"User data"
+// @Param			user	body	model.UpdateUserDTO	true	"User data"
 // @Success		204		"No Content"
 // @Failure		400		{object}	errors.ErrorResponse
 // @Failure		404		{object}	errors.ErrorResponse
