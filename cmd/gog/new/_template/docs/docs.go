@@ -122,7 +122,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/post.CreatePostDTO"
+                            "$ref": "#/definitions/model.CreatePostDTO"
                         }
                     }
                 ],
@@ -171,7 +171,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/post.Post"
+                            "$ref": "#/definitions/model.Post"
                         }
                     },
                     "400": {
@@ -214,7 +214,7 @@ const docTemplate = `{
                         "schema": {
                             "type": "array",
                             "items": {
-                                "$ref": "#/definitions/user.User"
+                                "$ref": "#/definitions/model.User"
                             }
                         }
                     },
@@ -245,7 +245,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/user.CreateUserDTO"
+                            "$ref": "#/definitions/model.CreateUserDTO"
                         }
                     }
                 ],
@@ -294,7 +294,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/user.User"
+                            "$ref": "#/definitions/model.User"
                         }
                     },
                     "400": {
@@ -343,7 +343,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/user.UpdateUserDTO"
+                            "$ref": "#/definitions/model.UpdateUserDTO"
                         }
                     }
                 ],
@@ -477,7 +477,7 @@ const docTemplate = `{
                 }
             }
         },
-        "post.CreatePostDTO": {
+        "model.CreatePostDTO": {
             "type": "object",
             "required": [
                 "author_id",
@@ -496,30 +496,7 @@ const docTemplate = `{
                 }
             }
         },
-        "post.Post": {
-            "type": "object",
-            "properties": {
-                "author_id": {
-                    "type": "string"
-                },
-                "content": {
-                    "type": "string"
-                },
-                "created_at": {
-                    "type": "string"
-                },
-                "id": {
-                    "type": "string"
-                },
-                "title": {
-                    "type": "string"
-                },
-                "updated_at": {
-                    "type": "string"
-                }
-            }
-        },
-        "user.CreateUserDTO": {
+        "model.CreateUserDTO": {
             "type": "object",
             "required": [
                 "email",
@@ -542,7 +519,33 @@ const docTemplate = `{
                 }
             }
         },
-        "user.UpdateUserDTO": {
+        "model.Post": {
+            "type": "object",
+            "properties": {
+                "author": {
+                    "$ref": "#/definitions/model.User"
+                },
+                "author_id": {
+                    "type": "string"
+                },
+                "content": {
+                    "type": "string"
+                },
+                "created_at": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "title": {
+                    "type": "string"
+                },
+                "updated_at": {
+                    "type": "string"
+                }
+            }
+        },
+        "model.UpdateUserDTO": {
             "type": "object",
             "properties": {
                 "firstName": {
@@ -556,7 +559,7 @@ const docTemplate = `{
                 }
             }
         },
-        "user.User": {
+        "model.User": {
             "type": "object",
             "properties": {
                 "createdAt": {
@@ -577,6 +580,12 @@ const docTemplate = `{
                 "phone": {
                     "type": "string"
                 },
+                "posts": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/model.Post"
+                    }
+                },
                 "updatedAt": {
                     "type": "string"
                 }
@@ -585,9 +594,9 @@ const docTemplate = `{
     },
     "securityDefinitions": {
         "ApiKey": {
-            "description": "API key for authentication",
+            "description": "Bearer token for authentication",
             "type": "apiKey",
-            "name": "X-API-KEY",
+            "name": "Authorization",
             "in": "header"
         }
     }

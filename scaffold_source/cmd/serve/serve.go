@@ -34,8 +34,8 @@ func NewServeCmd() *cobra.Command {
 // @BasePath					/api
 // @SecurityDefinitions.apikey	ApiKey
 // @In							header
-// @Name						X-API-KEY
-// @Description			    	API key for authentication
+// @Name						Authorization
+// @Description			    	Bearer token for authentication
 func Run(cmd *cobra.Command, args []string) error {
 	configFile, err := cmd.Flags().GetString("config")
 	if err != nil {

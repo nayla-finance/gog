@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"github.com/PROJECT_NAME/internal/db"
+	"github.com/PROJECT_NAME/internal/domains/model"
 	"github.com/google/uuid"
 )
 
@@ -11,9 +12,9 @@ var _ Repository = new(repo)
 
 type (
 	Repository interface {
-		createPost(ctx context.Context, post *Post) error
-		getPostByID(ctx context.Context, id uuid.UUID, post *Post) error
-		getPostsByUserID(ctx context.Context, userID uuid.UUID, posts *[]Post) error
+		createPost(ctx context.Context, post *model.Post) error
+		getPostByID(ctx context.Context, id uuid.UUID, post *model.Post) error
+		getPostsByUserID(ctx context.Context, userID uuid.UUID, posts *[]model.Post) error
 		deletePostsByUserID(ctx context.Context, userID uuid.UUID) error
 	}
 
@@ -34,7 +35,7 @@ func NewRepository(d repositoryDependencies) *repo {
 	return &repo{d: d}
 }
 
-func (r *repo) createPost(ctx context.Context, post *Post) error {
+func (r *repo) createPost(ctx context.Context, post *model.Post) error {
 	if _, err := r.d.DB().GetConn().NamedExecContext(ctx, "INSERT INTO posts (id, title, content, author_id) VALUES (:title, :content, :author_id)", post); err != nil {
 		return err
 	}
@@ -42,11 +43,11 @@ func (r *repo) createPost(ctx context.Context, post *Post) error {
 	return nil
 }
 
-func (r *repo) getPostByID(ctx context.Context, id uuid.UUID, p *Post) error {
+func (r *repo) getPostByID(ctx context.Context, id uuid.UUID, p *model.Post) error {
 	return r.d.DB().GetConn().GetContext(ctx, p, "SELECT * FROM posts WHERE id = $1", id)
 }
 
-func (r *repo) getPostsByUserID(ctx context.Context, userID uuid.UUID, posts *[]Post) error {
+func (r *repo) getPostsByUserID(ctx context.Context, userID uuid.UUID, posts *[]model.Post) error {
 	return r.d.DB().GetConn().SelectContext(ctx, posts, "SELECT * FROM posts WHERE author_id = $1", userID)
 }
 

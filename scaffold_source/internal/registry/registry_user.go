@@ -1,6 +1,9 @@
 package registry
 
-import "github.com/PROJECT_NAME/internal/domains/user"
+import (
+	"github.com/PROJECT_NAME/internal/domains/interfaces"
+	"github.com/PROJECT_NAME/internal/domains/user"
+)
 
 func (r *Registry) UserRepository() user.Repository {
 	if r.userRepository == nil {
@@ -10,7 +13,7 @@ func (r *Registry) UserRepository() user.Repository {
 	return r.userRepository
 }
 
-func (r *Registry) UserService() user.Service {
+func (r *Registry) UserService() interfaces.UserService {
 	if r.userService == nil {
 		r.userService = user.NewService(r)
 	}

@@ -2,6 +2,7 @@ package errors
 
 import (
 	"fmt"
+	"net/http"
 	"time"
 
 	"github.com/PROJECT_NAME/internal/logger"
@@ -38,7 +39,7 @@ func NewErrorHandler(d handlerDependencies) *Handler {
 }
 
 func (h *Handler) Handle(c *fiber.Ctx, err error) error {
-	sentry.CaptureException(err)
+	go reportError(err)
 
 	return h.errorResponseJSON(c, err)
 }
@@ -84,4 +85,19 @@ func (e *ErrorResponse) HttpStatus() int {
 	default:
 		return fiber.StatusInternalServerError
 	}
+}
+
+func reportError(err error) {
+	switch err := err.(type) {
+	case *AppError:
+		er := &ErrorResponse{
+			ErrorCode: err.Code,
+		}
+
+		if er.HttpStatus() < http.StatusInternalServerError {
+			return
+		}
+	}
+
+	sentry.CaptureException(err)
 }
