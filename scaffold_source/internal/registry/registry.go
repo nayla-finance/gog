@@ -8,6 +8,7 @@ import (
 	"github.com/PROJECT_NAME/internal/db"
 	"github.com/PROJECT_NAME/internal/domains/health"
 	"github.com/PROJECT_NAME/internal/domains/interfaces"
+	"github.com/PROJECT_NAME/internal/domains/model"
 	"github.com/PROJECT_NAME/internal/domains/post"
 	"github.com/PROJECT_NAME/internal/domains/user"
 	"github.com/PROJECT_NAME/internal/errors"
@@ -35,6 +36,8 @@ import (
 var _ RegistryProvider = new(Registry)
 
 type Registry struct {
+	signal model.Signal
+
 	db     db.Database
 	config *config.Config
 	logger logger.Logger
@@ -69,6 +72,7 @@ type Registry struct {
 
 func NewRegistry(c *config.Config) *Registry {
 	return &Registry{
+		signal: make(model.Signal, 10),
 		config: c,
 	}
 }
@@ -116,10 +120,17 @@ func (r *Registry) InitializeWithFiber(app *fiber.App) error {
 		return err
 	}
 
+	if err := r.RegisterConsumers(); err != nil {
+		return err
+	}
+
 	r.RegisterPreMiddlewares(app)
 	r.RegisterApiRoutes(app.Group("/api"))
 	r.RegisterPostMiddlewares(app)
 	// register other "things" (e.g. listeners, consumers, etc.)
+
+	// Register signal after initializing dependencies
+	r.RegisterSignalListener()
 
 	return nil
 }
@@ -165,8 +176,21 @@ func (r *Registry) Cleanup() error {
 		}
 	}
 
+	if r.signal != nil {
+		r.Logger().Debug("🔄 Closing signal channel")
+		close(r.signal)
+		r.signal = nil
+		r.Logger().Debug("✅ Signal channel closed")
+	}
+
 	r.Logger().Info("✅ Registry cleaned up successfully")
 	// call cleanup funcs (e.g. unsubscribe listeners, etc.)
+
+	return nil
+}
+
+func (r *Registry) RegisterConsumers() error {
+	// register consumers here
 
 	return nil
 }

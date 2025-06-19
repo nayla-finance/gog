@@ -66,3 +66,21 @@ func (s *svc) Cleanup() error {
 	s.d.Logger().Info("✅ NATS cleanup completed")
 	return nil
 }
+
+func (s *svc) Reconnect() error {
+	s.d.Logger().Info("🔄 Reconnecting to NATS...")
+
+	// If the connection is already closed, we should ignore cleanup error
+	// as it will always return an error
+	if err := s.Cleanup(); err != nil {
+		s.d.Logger().Error("❌ Failed to cleanup NATS", "error", err)
+	}
+
+	if s.nc != nil {
+		s.nc.Close()
+	}
+
+	s.d.Logger().Info("Cleaned successfully before reconnecting")
+
+	return s.Setup()
+}
