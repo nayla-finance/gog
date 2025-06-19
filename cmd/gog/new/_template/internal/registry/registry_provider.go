@@ -13,6 +13,7 @@ import (
 )
 
 type RegistryProvider interface {
+	interfaces.SignalProvider
 	db.DBProvider
 	config.ConfigProvider
 	logger.LoggerProvider

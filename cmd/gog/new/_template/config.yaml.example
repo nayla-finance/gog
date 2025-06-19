@@ -44,6 +44,12 @@ nats:
       - 5m
       - 15m
     default_backoff_duration: 1h
+  monitoring:
+    enabled: true
+    interval: 1m
+    # Map of consumer names to boolean flags to exclude from monitoring (e.g., consumer-name: true)
+    excluded_consumers: {}
+    pending_messages_threshold: 2
 
 sentry:
   dsn: https://PROJECT_NAME@sentry.io/PROJECT_NAME

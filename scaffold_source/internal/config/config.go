@@ -49,6 +49,13 @@ type (
 		PublicRoutes []string `mapstructure:"public_routes"`
 	}
 
+	NatsMonitoring struct {
+		Enabled                  bool            `mapstructure:"enabled"`
+		Interval                 time.Duration   `mapstructure:"interval" validate:"required_if=Enabled true"`
+		ExcludedConsumers        map[string]bool `mapstructure:"excluded_consumers"`
+		PendingMessagesThreshold int             `mapstructure:"pending_messages_threshold" validate:"required_if=Enabled true,omitempty,gt=0"`
+	}
+
 	NatsConsumer struct {
 		MaxDeliver             int             `mapstructure:"max_deliver"`
 		BackoffDurations       []time.Duration `mapstructure:"backoff_durations"`
@@ -56,12 +63,13 @@ type (
 	}
 
 	Nats struct {
-		Servers               string       `mapstructure:"servers" validate:"required"`
-		ClientName            string       `mapstructure:"client_name" validate:"required"`
-		CredsPath             string       `mapstructure:"creds_path" validate:"required"`
-		DefaultStreamName     string       `mapstructure:"default_stream_name" validate:"required"`
-		DefaultStreamSubjects []string     `mapstructure:"default_stream_subjects" validate:"required"`
-		Consumer              NatsConsumer `mapstructure:"consumer"`
+		Servers               string         `mapstructure:"servers" validate:"required"`
+		ClientName            string         `mapstructure:"client_name" validate:"required"`
+		CredsPath             string         `mapstructure:"creds_path" validate:"required"`
+		DefaultStreamName     string         `mapstructure:"default_stream_name" validate:"required"`
+		DefaultStreamSubjects []string       `mapstructure:"default_stream_subjects" validate:"required"`
+		Consumer              NatsConsumer   `mapstructure:"consumer"`
+		Monitoring            NatsMonitoring `mapstructure:"monitoring"`
 	}
 
 	Sentry struct {
@@ -119,6 +127,9 @@ func Load(configFile string) (*Config, error) {
 	v.SetDefault("nats.consumer.default_backoff_duration", time.Hour)
 	v.SetDefault("open_telemetry.enabled", false)
 	v.SetDefault("open_telemetry.excluded_routes", []string{"/api/health", "/api/health/ready", "/api/docs", "/metrics"})
+	v.SetDefault("nats.monitoring.enabled", false)
+	v.SetDefault("nats.monitoring.interval", 5*time.Minute)
+	v.SetDefault("nats.monitoring.pending_messages_threshold", 2)
 
 	var config Config
 	if err := v.Unmarshal(&config); err != nil {

@@ -5,6 +5,7 @@ import (
 
 	"github.com/PROJECT_NAME/internal/config"
 	"github.com/PROJECT_NAME/internal/logger"
+	"github.com/getsentry/sentry-go"
 	"github.com/google/uuid"
 	"github.com/nats-io/nats.go"
 	"github.com/nats-io/nats.go/jetstream"
@@ -32,7 +33,8 @@ func LoadConfig(d configDependencies) *NatsConfig {
 			d.Logger().Errorf("❌ NATS connection error: %s", err)
 		}),
 		nats.ClosedHandler(func(nc *nats.Conn) {
-			d.Logger().Info("✅ NATS connection closed")
+			d.Logger().Error("🚨 NATS connection closed")
+			sentry.CaptureMessage("NATS connection closed")
 		}),
 		nats.ReconnectHandler(func(nc *nats.Conn) {
 			d.Logger().Infof("🔄 Reconnected [%s]", nc.ConnectedUrl())
@@ -41,6 +43,8 @@ func LoadConfig(d configDependencies) *NatsConfig {
 			// provide a unique name for each connection
 			o.Name = d.Config().Nats.ClientName + "_" + uuid.New().String()
 			o.AllowReconnect = true
+			// -1 means reconnect forever which is what we want (default is 60 * 2 seconds waiting between reconnects = 2 minutes)
+			o.MaxReconnect = -1
 			return nil
 		},
 	}
