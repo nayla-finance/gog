@@ -40,8 +40,10 @@ definitions:
   health.HealthResponse:
     properties:
       message:
+        example: ""
         type: string
       status:
+        example: ok
         type: string
     type: object
   model.CreatePostDTO:
@@ -126,7 +128,7 @@ info:
   title: PROJECT_NAME
   version: "1.0"
 paths:
-  /health:
+  /healthz/alive:
     get:
       consumes:
       - application/json
@@ -142,10 +144,10 @@ paths:
           description: Internal Server Error
           schema:
             $ref: '#/definitions/health.HealthResponse'
-      summary: Health check
+      summary: Liveness check
       tags:
       - health
-  /health/ready:
+  /healthz/ready:
     get:
       consumes:
       - application/json
@@ -181,6 +183,8 @@ paths:
           description: Internal Server Error
           schema:
             $ref: '#/definitions/health.HealthResponse'
+      security:
+      - BearerAuth: []
       summary: Ping
       tags:
       - health

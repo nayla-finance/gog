@@ -4,6 +4,7 @@ import (
 	"context"
 	"time"
 
+	"github.com/PROJECT_NAME/internal/clients/testclient"
 	"github.com/PROJECT_NAME/internal/config"
 	"github.com/PROJECT_NAME/internal/db"
 	"github.com/PROJECT_NAME/internal/domains/health"
@@ -45,7 +46,8 @@ type Registry struct {
 	// errors
 	errorHandler *errors.Handler
 
-	retry *utils.Retry
+	retry         utils.Retry
+	healthService health.Service
 
 	natsService         nats.Service
 	consumerNameBuilder *nats.ConsumerNameBuilder
@@ -56,6 +58,8 @@ type Registry struct {
 
 	postRepository post.Repository
 	postService    interfaces.PostService
+
+	testClient testclient.Client
 
 	// otel
 	tp  *sdktrace.TracerProvider
@@ -205,7 +209,7 @@ func (r *Registry) RegisterPreMiddlewares(app *fiber.App) {
 
 func (r *Registry) RegisterApiRoutes(api fiber.Router) {
 	// health check
-	health.NewHealthHandler(r).RegisterRoutes(api)
+	health.NewHandler(r).RegisterRoutes(api)
 
 	// user routes
 	user.NewHandler(r).RegisterRoutes(api)

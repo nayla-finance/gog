@@ -33,7 +33,7 @@ type (
 )
 
 func Connect(d dbDependencies) (*db, error) {
-	dsn := fmt.Sprintf("host=%s user=%s password=%s dbname=%s port=%d sslmode=%s", d.Config().Database.Host, d.Config().Database.Username, d.Config().Database.Password, d.Config().Database.Name, d.Config().Database.Port, d.Config().Database.SSLMode)
+	dsn := fmt.Sprintf("host=%s user=%s password=%s dbname=%s port=%d sslmode=%s timezone=%s", d.Config().Database.Host, d.Config().Database.Username, d.Config().Database.Password, d.Config().Database.Name, d.Config().Database.Port, d.Config().Database.SSLMode, d.Config().Database.Timezone)
 
 	d.Logger().Debug(fmt.Sprintf("🔄 Connecting to '%s' database with user '%s'...", d.Config().Database.Name, d.Config().Database.Username))
 	conn, err := sqlx.Connect("postgres", dsn)
@@ -80,7 +80,7 @@ func (c *db) Transaction(fn func(tx *sqlx.Tx) error) error {
 
 	if err := fn(tx); err != nil {
 		if rbErr := tx.Rollback(); rbErr != nil {
-			return fmt.Errorf("tx failed: %v, rollback failed: %v", err, rbErr)
+			return err
 		}
 		return err
 	}
