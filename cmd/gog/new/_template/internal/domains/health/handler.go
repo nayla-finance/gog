@@ -1,67 +1,59 @@
 package health
 
 import (
-	"github.com/PROJECT_NAME/internal/db"
+	"github.com/PROJECT_NAME/internal/config"
 	"github.com/PROJECT_NAME/internal/logger"
-	"github.com/PROJECT_NAME/internal/nats"
 	"github.com/gofiber/fiber/v2"
 )
 
 type (
 	healthHandlerDependencies interface {
 		logger.LoggerProvider
-		db.DBProvider
-		nats.ServiceProvider
+		ServiceProvider
+		config.ConfigProvider
 	}
 
-	HealthHandler struct {
+	// Handler handles health check requests
+	handler struct {
 		d healthHandlerDependencies
 	}
 
+	// HealthResponse represents health check response
 	HealthResponse struct {
-		Status  string `json:"status"`
-		Message string `json:"message,omitempty"`
+		Status  string `json:"status" example:"ok"`
+		Message string `json:"message,omitempty" example:""`
 	}
 )
 
-func NewHealthHandler(d healthHandlerDependencies) *HealthHandler {
-	return &HealthHandler{d: d}
+func NewHandler(d healthHandlerDependencies) *handler {
+	return &handler{d: d}
 }
 
-func (h *HealthHandler) RegisterRoutes(r fiber.Router) {
+func (h *handler) RegisterRoutes(r fiber.Router) {
 	r.Get("/ping", h.Ping)
-	r.Get("/health", h.HealthCheck)
-	r.Get("/health/ready", h.ReadinessCheck)
+	r.Get("/healthz/alive", h.LivenessCheck)
+	r.Get("/healthz/ready", h.ReadinessCheck)
 }
 
-// @Summary      Health check
+// @Summary      Liveness check
 // @Description  Check if the application is running
 // @Tags         health
 // @Accept       json
 // @Produce      json
 // @Success      200  {object}  HealthResponse
 // @Failure      500  {object}  HealthResponse
-// @Router       /health [get]
-func (h *HealthHandler) HealthCheck(c *fiber.Ctx) error {
-	if err := h.d.DB().Ping(); err != nil {
-		h.d.Logger().Errorw("❌ Database connection is not healthy", "error", err)
+// @Router       /healthz/alive [get]
+func (h *handler) LivenessCheck(c *fiber.Ctx) error {
+	if err := h.d.HealthService().LivenessCheck(c.UserContext()); err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(HealthResponse{
 			Status:  "error",
 			Message: err.Error(),
 		})
 	}
 
-	if !h.d.NatsService().HealthCheck() {
-		return c.Status(fiber.StatusInternalServerError).JSON(HealthResponse{
-			Status:  "error",
-			Message: "NATS connection is not healthy",
-		})
-	}
-
-	h.d.Logger().Info("Health check passed ✅")
-
 	return c.JSON(HealthResponse{
-		Status: "ok",
+		Status:  "ok",
+		Message: "live and kicking! 🦁",
 	})
 }
 
@@ -72,29 +64,18 @@ func (h *HealthHandler) HealthCheck(c *fiber.Ctx) error {
 // @Produce      json
 // @Success      200  {object}  HealthResponse
 // @Failure      500  {object}  HealthResponse
-// @Router       /health/ready [get]
-func (h *HealthHandler) ReadinessCheck(c *fiber.Ctx) error {
-
-	// Check all dependencies are ready (e.g. database, services, etc.)
-
-	if err := h.d.DB().Ping(); err != nil {
+// @Router       /healthz/ready [get]
+func (h *handler) ReadinessCheck(c *fiber.Ctx) error {
+	if err := h.d.HealthService().ReadinessCheck(c.UserContext()); err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(HealthResponse{
 			Status:  "error",
 			Message: err.Error(),
 		})
 	}
 
-	if !h.d.NatsService().HealthCheck() {
-		return c.Status(fiber.StatusInternalServerError).JSON(HealthResponse{
-			Status:  "error",
-			Message: "NATS connection is not healthy",
-		})
-	}
-
-	h.d.Logger().Info("Readiness check passed ✅")
-
 	return c.JSON(HealthResponse{
-		Status: "ok",
+		Status:  "ok",
+		Message: "ready like a lion, ready to pounce on any incoming requests! 🦁",
 	})
 }
 
@@ -103,10 +84,12 @@ func (h *HealthHandler) ReadinessCheck(c *fiber.Ctx) error {
 // @Tags         health
 // @Accept       json
 // @Produce      json
+// @Security     BearerAuth
 // @Success      200  {object}  HealthResponse
 // @Failure      500  {object}  HealthResponse
 // @Router       /ping [get]
-func (h *HealthHandler) Ping(c *fiber.Ctx) error {
+func (h *handler) Ping(c *fiber.Ctx) error {
+	// Ping used to ping this service using its API key to make sure the connection is working
 	return c.JSON(HealthResponse{
 		Status: "ok",
 	})

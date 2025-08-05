@@ -3,7 +3,7 @@
 app:
   name: PROJECT_NAME
   env: production
-  port: 3022
+  port: 3000
   log_level: info
   timezone: Asia/Riyadh
   read_timeout: 60
@@ -11,16 +11,35 @@ app:
   max_retries: 3
   retry_delay: 500ms
 
+health:
+  liveness:
+    verbose_log: false
+    initial_checks_to_skip: 0
+  readiness:
+    verbose_log: true
+    initial_checks_to_skip: 0
+  dependencies:
+    nats:
+      readiness_check: true
+      liveness_check: true
+    database:
+      readiness_check: true
+      liveness_check: true
+    test_client:
+      readiness_check: false
+      liveness_check: true
+
 api:
   key: my-api-key
   public_routes:
-    - "/api/health"
-    - "/api/health/ready"
+    - "/api/healthz/alive"
+    - "/api/healthz/ready"
     - "/api/docs"
+    - "/metrics"
 
 database:
   host: localhost
-  port: 5460
+  port: 5432
   name: mydatabase
   username: myusername
   password: mypassword
@@ -28,6 +47,7 @@ database:
   ssl: false
   migrations_dir: migrations
   driver: postgres
+  migrate_table: schema_migrations
 
 nats:
   servers: nats://localhost:4222
@@ -45,9 +65,8 @@ nats:
       - 15m
     default_backoff_duration: 1h
   monitoring:
-    enabled: true
-    interval: 1m
-    # Map of consumer names to boolean flags to exclude from monitoring (e.g., consumer-name: true)
+    enabled: false
+    interval: 5m
     excluded_consumers: {}
     pending_messages_threshold: 2
 
@@ -58,7 +77,25 @@ sentry:
 open_telemetry:
   enabled: false
   excluded_routes:
-    - /api/health
-    - /api/health/ready
+    - /api/healthz/alive
+    - /api/healthz/ready
     - /api/docs
     - /metrics
+
+clients:
+  max_regular_body_size_mb: 5
+  timeout: 30s
+  http_transport:
+    dial_timeout: 30s
+    dial_keep_alive: 30s
+    max_idle_conns: 100
+    idle_conn_timeout: 20s
+    tls_handshake_timeout: 10s
+    disable_keep_alive: false
+  retry:
+    max_retries: 3
+    delay: 500ms
+
+test_client:
+  base_url: "http://whatsapp-bro.wave"
+  api_key: "super-super-super-secret-key"

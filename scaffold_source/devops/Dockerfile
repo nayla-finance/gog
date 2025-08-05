@@ -1,22 +1,24 @@
-FROM cgr.dev/chainguard/go AS builder
+FROM cgr.dev/chainguard/busybox:latest
 
+ARG TARGETARCH
 WORKDIR /app
 
-COPY go.mod go.sum ./
+# Debug: Show what files are available and what TARGETARCH is
+RUN echo "TARGETARCH is: ${TARGETARCH}" && \
+    echo "Available files in build context:" && \
+    ls -la /
 
-RUN go mod download
+# Copy the pre-built binary for the target architecture
+# and make it executable
+COPY --chmod=755 service-${TARGETARCH} ./service
+COPY docs ./docs
+COPY migrations ./migrations
 
-COPY . .
-
-RUN go build -o service .
-
-FROM cgr.dev/chainguard/busybox:latest AS runner
-
-WORKDIR /usr/bin
-
-COPY --from=builder /app/service ./
-COPY --from=builder /app/docs ./docs
-COPY --from=builder /app/migrations ./migrations
+# Debug: Verify the binary was copied and show its permissions
+RUN echo "Files in /app after copy:" && \
+    ls -la /app && \
+    echo "Binary details:" && \
+    file /app/service || echo "file command failed"
 
 EXPOSE 3000
 

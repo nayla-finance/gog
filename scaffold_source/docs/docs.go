@@ -15,7 +15,7 @@ const docTemplate = `{
     "host": "{{.Host}}",
     "basePath": "{{.BasePath}}",
     "paths": {
-        "/health": {
+        "/healthz/alive": {
             "get": {
                 "description": "Check if the application is running",
                 "consumes": [
@@ -27,7 +27,7 @@ const docTemplate = `{
                 "tags": [
                     "health"
                 ],
-                "summary": "Health check",
+                "summary": "Liveness check",
                 "responses": {
                     "200": {
                         "description": "OK",
@@ -44,7 +44,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/health/ready": {
+        "/healthz/ready": {
             "get": {
                 "description": "Check if the application is ready",
                 "consumes": [
@@ -75,6 +75,11 @@ const docTemplate = `{
         },
         "/ping": {
             "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "Tests connectivity by pinging the application, requires authentication to verify caller identity",
                 "consumes": [
                     "application/json"
@@ -470,10 +475,12 @@ const docTemplate = `{
             "type": "object",
             "properties": {
                 "message": {
-                    "type": "string"
+                    "type": "string",
+                    "example": ""
                 },
                 "status": {
-                    "type": "string"
+                    "type": "string",
+                    "example": "ok"
                 }
             }
         },
