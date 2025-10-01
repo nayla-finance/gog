@@ -13,6 +13,7 @@ import (
 	"github.com/PROJECT_NAME/internal/logger"
 	"github.com/PROJECT_NAME/internal/utils"
 	"github.com/PROJECT_NAME/internal/utils/iolimit"
+	"github.com/PROJECT_NAME/internal/utils/retry"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/trace"
@@ -40,7 +41,7 @@ type (
 	clientDependencies interface {
 		config.ConfigProvider
 		logger.LoggerProvider
-		utils.RetryProvider
+		retry.RetryProvider
 	}
 
 	client struct {
