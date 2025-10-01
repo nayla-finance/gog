@@ -16,7 +16,7 @@ import (
 	"github.com/PROJECT_NAME/internal/logger"
 	"github.com/PROJECT_NAME/internal/middleware"
 	"github.com/PROJECT_NAME/internal/nats"
-	"github.com/PROJECT_NAME/internal/utils"
+	"github.com/PROJECT_NAME/internal/utils/retry"
 	"github.com/getsentry/sentry-go"
 	sentryfiber "github.com/getsentry/sentry-go/fiber"
 	"github.com/gofiber/contrib/otelfiber"
@@ -46,7 +46,7 @@ type Registry struct {
 	// errors
 	errorHandler *errors.Handler
 
-	retry         utils.Retry
+	retry         retry.Retry
 	healthService health.Service
 
 	natsService         nats.Service

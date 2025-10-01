@@ -35,3 +35,7 @@ func NewLogger(d loggerDependencies) Logger {
 
 	return log.DefaultLogger()
 }
+
+func NewMockLogger() Logger {
+	return log.DefaultLogger()
+}

@@ -9,7 +9,7 @@ import (
 	"github.com/PROJECT_NAME/internal/domains/interfaces"
 	"github.com/PROJECT_NAME/internal/errors"
 	"github.com/PROJECT_NAME/internal/logger"
-	"github.com/PROJECT_NAME/internal/utils"
+	"github.com/PROJECT_NAME/internal/utils/retry"
 	"github.com/getsentry/sentry-go"
 	"github.com/nats-io/nats.go"
 	"github.com/nats-io/nats.go/jetstream"
@@ -38,7 +38,7 @@ type (
 		config.ConfigProvider
 		logger.LoggerProvider
 		errors.ErrorProvider
-		utils.RetryProvider
+		retry.RetryProvider
 		interfaces.SignalProvider
 	}
 
@@ -132,11 +132,11 @@ func (s *svc) Consume(name string, subjects []string, handler ConsumerHandler, o
 	s.d.Logger().Info("Consuming messages", " by ", name, " on subjects ", subjects)
 
 	return consumer.Consume(func(msg jetstream.Msg) {
-		_, span := tracer.Start(context.Background(), name)
+		ctx, span := tracer.Start(context.Background(), name)
 		span.SetAttributes(attribute.String("subject", msg.Subject()))
 		defer span.End()
 
-		if err := handler(msg); err != nil {
+		if err := handler(ctx, msg); err != nil {
 			s.d.Logger().Error("Failed to handle message in consumer ", name, " error ", err)
 			sentry.CaptureException(err)
 			span.RecordError(err)
