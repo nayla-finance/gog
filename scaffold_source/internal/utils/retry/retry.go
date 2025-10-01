@@ -1,4 +1,4 @@
-package utils
+package retry
 
 import (
 	"fmt"
@@ -49,15 +49,16 @@ func (r *retry) Do(operation func() error, name string) error {
 			lastErr = err
 
 			if attempts > r.d.Config().App.MaxRetries {
-				r.d.Logger().Error("Operation ", name, " failed after max retries", " error ", lastErr)
+				r.d.Logger().Errorw("Operation failed after max retries", "name", name, "error", lastErr, "attempts", attempts)
 				return lastErr
 			}
 
 			attempts++
-			r.d.Logger().Warn("Operation ", name, " failed, retrying... ",
-				" attempt ", attempts,
-				" maxRetries ", r.d.Config().App.MaxRetries,
-				" error ", err)
+			r.d.Logger().Warnw("Operation failed, retrying...",
+				"name", name,
+				"attempt", attempts,
+				"maxRetries", r.d.Config().App.MaxRetries,
+				"error", err)
 			time.Sleep(r.d.Config().App.RetryDelay)
 			continue
 		}
@@ -174,7 +175,12 @@ func (r *retry) DoHttp(name string, c *http.Client, req *http.Request) (*http.Re
 		// We either got a 500 response or a retryable network error
 		// Apply backoff delay before retrying
 		delay := r.d.Config().Clients.Retry.Delay * time.Duration(i+1)
-		r.d.Logger().Warnw("⚠️ HTTP request failed, retrying... ", "method", req.Method, "url", req.URL.String(), "delay_ms", delay.Milliseconds(), "status", statusCode, "error", err)
+		r.d.Logger().Warnw("⚠️ HTTP request failed, retrying...",
+			"method", req.Method,
+			"url", req.URL.String(),
+			"delay_ms", delay.Milliseconds(),
+			"status", statusCode,
+			"error", err)
 		time.Sleep(delay)
 	}
 
