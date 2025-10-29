@@ -7,15 +7,15 @@ import (
 	"github.com/PROJECT_NAME/internal/domains/interfaces"
 	"github.com/PROJECT_NAME/internal/domains/model"
 	"github.com/PROJECT_NAME/internal/errors"
-	"github.com/PROJECT_NAME/internal/logger"
 	"github.com/google/uuid"
+	"github.com/nayla-finance/go-nayla/logger"
 )
 
 var _ interfaces.PostService = new(svc)
 
 type (
 	serviceDependencies interface {
-		logger.LoggerProvider
+		logger.Provider
 		config.ConfigProvider
 		errors.ErrorProvider
 		RepositoryProvider

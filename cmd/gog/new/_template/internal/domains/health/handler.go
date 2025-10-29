@@ -2,13 +2,13 @@ package health
 
 import (
 	"github.com/PROJECT_NAME/internal/config"
-	"github.com/PROJECT_NAME/internal/logger"
 	"github.com/gofiber/fiber/v2"
+	"github.com/nayla-finance/go-nayla/logger"
 )
 
 type (
 	healthHandlerDependencies interface {
-		logger.LoggerProvider
+		logger.Provider
 		ServiceProvider
 		config.ConfigProvider
 	}
@@ -84,7 +84,7 @@ func (h *handler) ReadinessCheck(c *fiber.Ctx) error {
 // @Tags         health
 // @Accept       json
 // @Produce      json
-// @Security     BearerAuth
+// @Security     ApiKey
 // @Success      200  {object}  HealthResponse
 // @Failure      500  {object}  HealthResponse
 // @Router       /ping [get]

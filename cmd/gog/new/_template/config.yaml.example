@@ -82,20 +82,9 @@ open_telemetry:
     - /api/docs
     - /metrics
 
-clients:
-  max_regular_body_size_mb: 5
-  timeout: 30s
-  http_transport:
-    dial_timeout: 30s
-    dial_keep_alive: 30s
-    max_idle_conns: 100
-    idle_conn_timeout: 20s
-    tls_handshake_timeout: 10s
-    disable_keep_alive: false
-  retry:
-    max_retries: 3
-    delay: 500ms
-
-test_client:
-  base_url: "http://whatsapp-bro.wave"
-  api_key: "super-super-super-secret-key"
+los:
+  base_url: http://localhost:3100
+  api_key: a3f99de61b5c73f44607c25e240212feca3ae546024abcb4e832878f42ed0052
+kyc:
+  base_url: http://localhost:3012
+  api_key: a3f99de61b5c73f44607c25e240212feca3ae546024abcb4e832878f42ed0052

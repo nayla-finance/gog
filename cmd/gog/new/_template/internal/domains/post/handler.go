@@ -5,14 +5,14 @@ import (
 	"github.com/PROJECT_NAME/internal/domains/interfaces"
 	"github.com/PROJECT_NAME/internal/domains/model"
 	"github.com/PROJECT_NAME/internal/errors"
-	"github.com/PROJECT_NAME/internal/logger"
 	"github.com/gofiber/fiber/v2"
 	"github.com/google/uuid"
+	"github.com/nayla-finance/go-nayla/logger"
 )
 
 type (
 	handlerDependencies interface {
-		logger.LoggerProvider
+		logger.Provider
 		config.ConfigProvider
 		interfaces.PostServiceProvider
 		errors.ErrorProvider
