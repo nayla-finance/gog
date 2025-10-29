@@ -72,11 +72,12 @@ func Run(cmd *cobra.Command, args []string) error {
 	case err := <-serverErr:
 		return fmt.Errorf("server error: %w", err)
 	case sig := <-sigChan:
-		r.Logger().Info("Received shutdown signal", "signal", sig)
 
 		// Create shutdown context with timeout
 		shutdownCtx, shutdownCancel := context.WithTimeout(context.Background(), 30*time.Second)
 		defer shutdownCancel()
+
+		r.Logger().Infow(shutdownCtx, "Received shutdown signal", "signal", sig)
 
 		// Start cleanup in a goroutine
 		done := make(chan struct{})
@@ -88,16 +89,16 @@ func Run(cmd *cobra.Command, args []string) error {
 
 			// Graceful shutdown of the fiber app
 			if err := app.ShutdownWithContext(shutdownCtx); err != nil {
-				r.Logger().Error("Error during HTTP server shutdown", "error", err)
+				r.Logger().Errorw(shutdownCtx, "Error during HTTP server shutdown", "error", err)
 			}
 		}()
 
 		// Wait for cleanup to finish or timeout
 		select {
 		case <-done:
-			r.Logger().Info("Graceful shutdown completed")
+			r.Logger().Infow(shutdownCtx, "Graceful shutdown completed")
 		case <-shutdownCtx.Done():
-			r.Logger().Error("Shutdown timed out")
+			r.Logger().Errorw(shutdownCtx, "Shutdown timed out")
 		}
 	}
 

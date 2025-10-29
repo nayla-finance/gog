@@ -1,13 +1,12 @@
 package errors
 
 import (
-	"fmt"
 	"net/http"
 	"time"
 
-	"github.com/PROJECT_NAME/internal/logger"
 	"github.com/getsentry/sentry-go"
 	"github.com/gofiber/fiber/v2"
+	"github.com/nayla-finance/go-nayla/logger"
 )
 
 type (
@@ -16,7 +15,7 @@ type (
 	}
 
 	handlerDependencies interface {
-		logger.LoggerProvider
+		logger.Provider
 	}
 
 	Handler struct {
@@ -44,7 +43,7 @@ func (h *Handler) Handle(c *fiber.Ctx, err error) error {
 	return h.errorResponseJSON(c, err)
 }
 
-func (h *Handler) errorResponseJSON(ctx *fiber.Ctx, err error) error {
+func (h *Handler) errorResponseJSON(c *fiber.Ctx, err error) error {
 	er := &ErrorResponse{}
 
 	// If it's already our custom error, use it
@@ -57,18 +56,18 @@ func (h *Handler) errorResponseJSON(ctx *fiber.Ctx, err error) error {
 		er.Message = err.Error()
 	}
 
-	er.Path = ctx.Path()
+	er.Path = c.Path()
 	er.Timestamp = time.Now().Format(time.RFC3339)
 	er.StatusCode = er.HttpStatus()
 
-	h.d.Logger().Error(fmt.Sprintf("🔥🔥🔥 Error - path: %s request_id: %s status: %d error: %s",
-		ctx.Path(),
-		ctx.Locals("RequestID"),
-		er.StatusCode,
-		err.Error(),
-	))
+	h.d.Logger().Errorw(c.UserContext(), "🔥🔥🔥 Error ",
+		"path", c.Path(),
+		"request_id", c.Locals("RequestID"),
+		"status_code", er.StatusCode,
+		"error", err.Error(),
+	)
 
-	return ctx.Status(er.StatusCode).JSON(er)
+	return c.Status(er.StatusCode).JSON(er)
 }
 
 // Map error codes to HTTP status codes

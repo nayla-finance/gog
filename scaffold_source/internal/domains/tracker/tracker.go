@@ -4,8 +4,8 @@ import (
 	"encoding/json"
 	"time"
 
-	"github.com/PROJECT_NAME/internal/validator"
 	"github.com/google/uuid"
+	"github.com/nayla-finance/go-nayla/validator"
 )
 
 type Tracker struct {

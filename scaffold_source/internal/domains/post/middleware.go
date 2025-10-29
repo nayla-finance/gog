@@ -3,8 +3,8 @@ package post
 import (
 	"github.com/PROJECT_NAME/internal/config"
 	"github.com/PROJECT_NAME/internal/errors"
-	"github.com/PROJECT_NAME/internal/logger"
 	"github.com/gofiber/fiber/v2"
+	"github.com/nayla-finance/go-nayla/logger"
 )
 
 // specific middlewares for post domain
@@ -12,7 +12,7 @@ import (
 type (
 	specificPostMiddlewareDependencies interface {
 		config.ConfigProvider
-		logger.LoggerProvider
+		logger.Provider
 		errors.ErrorProvider
 	}
 
