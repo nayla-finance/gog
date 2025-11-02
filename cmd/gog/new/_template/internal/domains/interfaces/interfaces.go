@@ -5,3 +5,7 @@ package interfaces
 type Service interface{}
 
 type ServiceProvider interface{}
+
+type Payload interface {
+	Validate() error
+}
