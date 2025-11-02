@@ -5,7 +5,7 @@ import (
 
 	"github.com/PROJECT_NAME/internal/db"
 	"github.com/PROJECT_NAME/internal/domains/model"
-	"github.com/PROJECT_NAME/internal/logger"
+	"github.com/nayla-finance/go-nayla/logger"
 )
 
 var _ Repository = new(repo)
@@ -24,7 +24,7 @@ type (
 	}
 
 	repositoryDependencies interface {
-		logger.LoggerProvider
+		logger.Provider
 		db.DBProvider
 	}
 

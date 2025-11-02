@@ -1,7 +1,6 @@
 package registry
 
 import (
-	"github.com/PROJECT_NAME/internal/clients/testclient"
 	"github.com/PROJECT_NAME/internal/config"
 	"github.com/PROJECT_NAME/internal/db"
 	"github.com/PROJECT_NAME/internal/domains/health"
@@ -9,25 +8,23 @@ import (
 	"github.com/PROJECT_NAME/internal/domains/post"
 	"github.com/PROJECT_NAME/internal/domains/user"
 	"github.com/PROJECT_NAME/internal/errors"
-	"github.com/PROJECT_NAME/internal/logger"
-	"github.com/PROJECT_NAME/internal/nats"
-	"github.com/PROJECT_NAME/internal/utils/retry"
+	"github.com/nayla-finance/go-nayla/clients/rest/kyc"
+	"github.com/nayla-finance/go-nayla/clients/rest/los"
+	"github.com/nayla-finance/go-nayla/logger"
+	"github.com/nayla-finance/go-nayla/nats"
 )
 
 type RegistryProvider interface {
 	interfaces.SignalProvider
 	db.DBProvider
 	config.ConfigProvider
-	logger.LoggerProvider
+	logger.Provider
 
 	// errors
 	errors.ErrorProvider
 	errors.ErrorHandlerProvider
 
 	nats.ServiceProvider
-	nats.ConsumerNameBuilderProvider
-
-	retry.RetryProvider
 
 	// domains
 	// user
@@ -38,7 +35,8 @@ type RegistryProvider interface {
 	post.RepositoryProvider
 	interfaces.PostServiceProvider
 
-	testclient.ClientProvider
+	kyc.ClientProvider
+	los.ClientProvider
 }
 
 func (r *Registry) DB() db.Database {
@@ -50,10 +48,6 @@ func (r *Registry) Config() *config.Config {
 }
 
 func (r *Registry) Logger() logger.Logger {
-	if r.logger == nil {
-		r.logger = logger.NewLogger(r)
-	}
-
 	return r.logger
 }
 
@@ -72,18 +66,14 @@ func (r *Registry) ErrorHandler() *errors.Handler {
 	return r.errorHandler
 }
 
-func (r *Registry) Retry() retry.Retry {
-	if r.retry == nil {
-		r.retry = retry.NewRetry(r)
-	}
-
-	return r.retry
-}
-
 func (r *Registry) HealthService() health.Service {
 	if r.healthService == nil {
 		r.healthService = health.NewService(r)
 	}
 
 	return r.healthService
+}
+
+func (r *Registry) NatsService() nats.Service {
+	return r.natsService
 }

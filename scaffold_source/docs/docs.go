@@ -77,7 +77,7 @@ const docTemplate = `{
             "get": {
                 "security": [
                     {
-                        "BearerAuth": []
+                        "ApiKey": []
                     }
                 ],
                 "description": "Tests connectivity by pinging the application, requires authentication to verify caller identity",

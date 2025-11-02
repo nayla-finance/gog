@@ -1,46 +1,52 @@
 package registry
 
-import "github.com/PROJECT_NAME/internal/domains/model"
+import (
+	"context"
+
+	"github.com/PROJECT_NAME/internal/domains/model"
+)
 
 func (r *Registry) SendSignal(signal model.SignalPayload) {
 	if r.signal == nil {
-		r.Logger().Debug("⚠️ Signal channel is not initialized, skipping signal")
+		r.Logger().Debugw(context.Background(), "⚠️ Signal channel is not initialized, skipping signal")
 		return
 	}
 
 	select {
 	case r.signal <- signal:
 	default:
-		r.Logger().Warn("⚠️  Dropping signal – listener not ready")
+		r.Logger().Warnw(context.Background(), "⚠️  Dropping signal – listener not ready")
 	}
 }
 
 func (r *Registry) RegisterSignalListener() {
 	go func() {
 		for signal := range r.signal {
-			r.Logger().Debugw("Received signal", "type", signal.Type)
+			ctx := context.Background()
+
+			r.Logger().Debugw(ctx, "Received signal", "type", signal.Type)
 			switch signal.Type {
 			case model.SignalTypeNatsConsumerRestart:
-				if !r.NatsService().HealthCheck() {
-					r.Logger().Debug("❌ NATS connection is not healthy, reconnecting")
-					if err := r.NatsService().Reconnect(); err != nil {
-						r.Logger().Errorw("❌ Failed to reconnect to NATS", "error", err)
+				if !r.NatsService().Ping(ctx) {
+					r.Logger().Debugw(ctx, "❌ NATS connection is not healthy, reconnecting")
+					if err := r.NatsService().Reconnect(ctx); err != nil {
+						r.Logger().Errorw(ctx, "❌ Failed to reconnect to NATS", "error", err)
 						continue
 					}
 
-					r.Logger().Debug("✅ NATS connection reestablished")
+					r.Logger().Debugw(ctx, "✅ NATS connection reestablished")
 				}
 
-				r.Logger().Debug("✅ NATS consumer restart requested")
+				r.Logger().Debugw(ctx, "✅ NATS consumer restart requested")
 				if err := r.RegisterConsumers(); err != nil {
-					r.Logger().Errorw("❌ Failed to register consumers", "error", err)
+					r.Logger().Errorw(ctx, "❌ Failed to register consumers", "error", err)
 					continue
 				}
 
-				r.Logger().Debug("✅ NATS consumer restart successful")
+				r.Logger().Debugw(ctx, "✅ NATS consumer restart successful")
 			}
 		}
 
-		r.Logger().Debug("✅ Signal listener stopped")
+		r.Logger().Debugw(context.Background(), "✅ Signal listener stopped")
 	}()
 }

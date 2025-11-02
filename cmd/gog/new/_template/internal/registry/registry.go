@@ -4,7 +4,6 @@ import (
 	"context"
 	"time"
 
-	"github.com/PROJECT_NAME/internal/clients/testclient"
 	"github.com/PROJECT_NAME/internal/config"
 	"github.com/PROJECT_NAME/internal/db"
 	"github.com/PROJECT_NAME/internal/domains/health"
@@ -13,24 +12,18 @@ import (
 	"github.com/PROJECT_NAME/internal/domains/post"
 	"github.com/PROJECT_NAME/internal/domains/user"
 	"github.com/PROJECT_NAME/internal/errors"
-	"github.com/PROJECT_NAME/internal/logger"
-	"github.com/PROJECT_NAME/internal/middleware"
-	"github.com/PROJECT_NAME/internal/nats"
-	"github.com/PROJECT_NAME/internal/utils/retry"
 	"github.com/getsentry/sentry-go"
 	sentryfiber "github.com/getsentry/sentry-go/fiber"
 	"github.com/gofiber/contrib/otelfiber"
 	"github.com/gofiber/fiber/v2"
+	"github.com/nayla-finance/go-nayla/clients/rest/kyc"
+	"github.com/nayla-finance/go-nayla/clients/rest/los"
+	"github.com/nayla-finance/go-nayla/logger"
+	"github.com/nayla-finance/go-nayla/middleware"
+	"github.com/nayla-finance/go-nayla/nats"
+	"github.com/nayla-finance/go-nayla/otel"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/valyala/fasthttp/fasthttpadaptor"
-	"go.opentelemetry.io/otel"
-	"go.opentelemetry.io/otel/attribute"
-	"go.opentelemetry.io/otel/exporters/otlp/otlptrace"
-	"go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracegrpc"
-	"go.opentelemetry.io/otel/propagation"
-	"go.opentelemetry.io/otel/sdk/resource"
-	sdktrace "go.opentelemetry.io/otel/sdk/trace"
-	semconv "go.opentelemetry.io/otel/semconv/v1.26.0"
 )
 
 // Ensure that Registry implements RegistryProvider
@@ -46,11 +39,9 @@ type Registry struct {
 	// errors
 	errorHandler *errors.Handler
 
-	retry         retry.Retry
 	healthService health.Service
 
-	natsService         nats.Service
-	consumerNameBuilder *nats.ConsumerNameBuilder
+	natsService nats.Service
 
 	// domains
 	userRepository user.Repository
@@ -59,11 +50,11 @@ type Registry struct {
 	postRepository post.Repository
 	postService    interfaces.PostService
 
-	testClient testclient.Client
+	kycClient kyc.Client
+	losClient los.Client
 
 	// otel
-	tp  *sdktrace.TracerProvider
-	exp *otlptrace.Exporter
+	otelClient *otel.Client
 }
 
 // Uncomment if you need child spans
@@ -100,7 +91,7 @@ func (r *Registry) InitializeWithFiber(app *fiber.App) error {
 
 	var err error
 	if r.Config().OpenTelemetry.Enabled {
-		r.tp, r.exp, err = r.initializeOpenTelemetry(ctx)
+		r.otelClient, err = otel.NewClient(ctx)
 		if err != nil {
 			return err
 		}
@@ -119,7 +110,7 @@ func (r *Registry) InitializeWithFiber(app *fiber.App) error {
 		serveMetrics(app)
 	}
 
-	if err := r.Initialize(); err != nil {
+	if err := r.Initialize(ctx); err != nil {
 		sentry.CaptureException(err)
 		return err
 	}
@@ -128,9 +119,17 @@ func (r *Registry) InitializeWithFiber(app *fiber.App) error {
 		return err
 	}
 
-	r.RegisterPreMiddlewares(app)
+	// Register pre middlewares
+	if err := r.RegisterPreMiddlewares(app); err != nil {
+		return err
+	}
+
 	r.RegisterApiRoutes(app.Group("/api"))
-	r.RegisterPostMiddlewares(app)
+
+	// Register post middlewares
+	if err := r.RegisterPostMiddlewares(app); err != nil {
+		return err
+	}
 	// register other "things" (e.g. listeners, consumers, etc.)
 
 	// Register signal after initializing dependencies
@@ -139,16 +138,47 @@ func (r *Registry) InitializeWithFiber(app *fiber.App) error {
 	return nil
 }
 
-func (r *Registry) Initialize() error {
+func (r *Registry) Initialize(ctx context.Context) error {
 	var err error
+
+	r.logger, err = logger.NewLogger(
+		logger.WithLogLevel(r.Config().App.LogLevel),
+		logger.WithSpanLevel(r.Config().App.LogLevel),
+	)
+	if err != nil {
+		return err
+	}
 
 	r.db, err = db.Connect(r)
 	if err != nil {
 		return err
 	}
 
-	r.natsService, err = nats.NewService(r)
+	r.natsService, err = nats.NewService(
+		ctx,
+		nats.WithServers([]string{r.config.Nats.Servers}),
+		nats.WithAuthProvider(nats.NewCredsAuth(r.config.Nats.CredsPath)),
+		nats.WithClientName(r.config.Nats.ClientName),
+		nats.WithLogger(r.Logger()),
+		nats.WithJetstreamEnabled(true),
+		nats.WithStream(nats.Stream{
+			Name:     r.config.Nats.DefaultStreamName,
+			Subjects: r.config.Nats.DefaultStreamSubjects,
+		}),
+		nats.WithMonitoringInterval(r.config.Nats.Monitoring.Interval),
+		nats.WithMonitoringPendingMessagesThreshold(r.config.Nats.Monitoring.PendingMessagesThreshold),
+		nats.WithMonitoringExcludedConsumers(r.config.Nats.Monitoring.ExcludedConsumers),
+		nats.WithMonitoringOnConsumerRestart(func(ctx context.Context, consumerName string) {
+			r.SendSignal(model.SignalPayload{
+				Type: model.SignalTypeNatsConsumerRestart,
+			})
+		}),
+	)
 	if err != nil {
+		return err
+	}
+
+	if err := r.InitializeClients(); err != nil {
 		return err
 	}
 
@@ -156,38 +186,35 @@ func (r *Registry) Initialize() error {
 }
 
 func (r *Registry) Cleanup() error {
-	r.Logger().Debug("🧹 Cleaning up registry")
+	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+	defer cancel()
 
-	r.Logger().Info("🔌 Closing database connection")
+	r.Logger().Debugw(ctx, "🧹 Cleaning up registry")
+
+	r.Logger().Infow(ctx, "🔌 Closing database connection")
 	if err := r.db.Close(); err != nil {
 		return err
 	}
 
-	r.Logger().Info("🔌 Closing NATS connection")
-	if err := r.natsService.Cleanup(); err != nil {
+	r.Logger().Infow(ctx, "🔌 Closing NATS connection")
+	if err := r.NatsService().Cleanup(ctx); err != nil {
 		return err
 	}
 
-	if r.tp != nil {
-		if err := r.tp.Shutdown(context.Background()); err != nil {
-			r.Logger().Error("Error shutting down tracer provider: %v", err)
-		}
-	}
-
-	if r.exp != nil {
-		if err := r.exp.Shutdown(context.Background()); err != nil {
-			r.Logger().Error("Error shutting down exporter: %v", err)
+	if r.otelClient != nil {
+		if err := r.otelClient.Shutdown(ctx); err != nil {
+			r.Logger().Errorw(ctx, "Error shutting down tracer provider", "error", err)
 		}
 	}
 
 	if r.signal != nil {
-		r.Logger().Debug("🔄 Closing signal channel")
+		r.Logger().Debugw(ctx, "🔄 Closing signal channel")
 		close(r.signal)
 		r.signal = nil
-		r.Logger().Debug("✅ Signal channel closed")
+		r.Logger().Debugw(ctx, "✅ Signal channel closed")
 	}
 
-	r.Logger().Info("✅ Registry cleaned up successfully")
+	r.Logger().Infow(ctx, "✅ Registry cleaned up successfully")
 	// call cleanup funcs (e.g. unsubscribe listeners, etc.)
 
 	return nil
@@ -199,12 +226,36 @@ func (r *Registry) RegisterConsumers() error {
 	return nil
 }
 
-func (r *Registry) RegisterPreMiddlewares(app *fiber.App) {
+func (r *Registry) RegisterPreMiddlewares(app *fiber.App) error {
 	// Global middlewares apply to all routes
+
 	app.Use(middleware.NewRequestIDMiddleware().Handle)
-	app.Use(middleware.NewLoggingMiddleware(r).Handle)
-	app.Use(middleware.NewAuthMiddleware(r).Handle)
+
+	requestIDMiddleware, err := middleware.NewLoggingMiddleware(
+		middleware.WithLogger(r.Logger()),
+	)
+	if err != nil {
+		return err
+	}
+	app.Use(requestIDMiddleware.Handle)
+
+	authMiddleware, err := middleware.NewAuthMiddleware(
+		middleware.WithAuthAPIKey(r.Config().Api.Key),
+		middleware.WithAuthFallbackToXAPIKeyHeader(true),
+		middleware.WithAuthLogger(r.Logger()),
+		middleware.WithAuthPublicRoutes(r.Config().Api.PublicRoutes),
+		middleware.WithAuthOnUnauthorized(func() error {
+			return r.NewError(errors.ErrUnauthorized, "unauthorized missing or invalid API key")
+		}),
+	)
+	if err != nil {
+		return err
+	}
+	app.Use(authMiddleware.Handle)
+
 	// register other middlewares
+
+	return nil
 }
 
 func (r *Registry) RegisterApiRoutes(api fiber.Router) {
@@ -220,54 +271,19 @@ func (r *Registry) RegisterApiRoutes(api fiber.Router) {
 	// register other routes
 }
 
-func (r *Registry) RegisterPostMiddlewares(app *fiber.App) {
-	app.Use(middleware.NewNotFoundMiddleware(r).Handle)
-}
-
-func (r *Registry) initializeOpenTelemetry(ctx context.Context) (*sdktrace.TracerProvider, *otlptrace.Exporter, error) {
-	// It'll uses these envs to get the endpoint and service name
-	// OTEL_SERVICE_NAME=nayla-manual-payment-svc
-	// OTEL_EXPORTER_OTLP_ENDPOINT=https://mymonitor.nayla.tech:443
-	// OTEL_EXPORTER_OTLP_HEADERS=x-special-key=your_key_here
-
-	// Configure a new OTLP exporter using environment variables for sending data to Honeycomb over gRPC
-	clientOTel := otlptracegrpc.NewClient()
-	exp, err := otlptrace.New(ctx, clientOTel)
+func (r *Registry) RegisterPostMiddlewares(app *fiber.App) error {
+	notFoundMiddleware, err := middleware.NewNotFoundMiddleware(
+		middleware.WithNotFoundLogger(r.Logger()),
+		middleware.WithNotFoundOnNotFound(func() error {
+			return r.NewError(errors.ErrResourceNotFound, "route not found")
+		}),
+	)
 	if err != nil {
-		return nil, nil, err
+		return err
 	}
+	app.Use(notFoundMiddleware.Handle)
 
-	resource, rErr := resource.Merge(
-		resource.Default(),
-		resource.NewWithAttributes(
-			semconv.SchemaURL,
-			attribute.String("environment", r.Config().App.Env),
-		),
-	)
-
-	if rErr != nil {
-		return nil, nil, rErr
-	}
-
-	// Create a new tracer provider with a batch span processor and the otlp exporter
-	tp := sdktrace.NewTracerProvider(
-		sdktrace.WithBatcher(exp),
-		sdktrace.WithSampler(sdktrace.AlwaysSample()),
-		sdktrace.WithResource(resource),
-	)
-
-	// Register the global Tracer provider
-	otel.SetTracerProvider(tp)
-
-	// Register the W3C trace context and baggage propagators so data is propagated across services/processes
-	otel.SetTextMapPropagator(
-		propagation.NewCompositeTextMapPropagator(
-			propagation.TraceContext{},
-			propagation.Baggage{},
-		),
-	)
-
-	return tp, exp, nil
+	return nil
 }
 
 func serveMetrics(app *fiber.App) {

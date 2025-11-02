@@ -184,7 +184,7 @@ paths:
           schema:
             $ref: '#/definitions/health.HealthResponse'
       security:
-      - BearerAuth: []
+      - ApiKey: []
       summary: Ping
       tags:
       - health

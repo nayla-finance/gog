@@ -1,11 +1,12 @@
 package db
 
 import (
+	"context"
 	"fmt"
 
 	"github.com/PROJECT_NAME/internal/config"
-	"github.com/PROJECT_NAME/internal/logger"
 	"github.com/jmoiron/sqlx"
+	"github.com/nayla-finance/go-nayla/logger"
 )
 
 var _ Database = new(db)
@@ -24,7 +25,7 @@ type (
 
 	dbDependencies interface {
 		config.ConfigProvider
-		logger.LoggerProvider
+		logger.Provider
 	}
 
 	db struct {
@@ -35,14 +36,16 @@ type (
 func Connect(d dbDependencies) (*db, error) {
 	dsn := fmt.Sprintf("host=%s user=%s password=%s dbname=%s port=%d sslmode=%s timezone=%s", d.Config().Database.Host, d.Config().Database.Username, d.Config().Database.Password, d.Config().Database.Name, d.Config().Database.Port, d.Config().Database.SSLMode, d.Config().Database.Timezone)
 
-	d.Logger().Debug(fmt.Sprintf("🔄 Connecting to '%s' database with user '%s'...", d.Config().Database.Name, d.Config().Database.Username))
+	ctx := context.Background()
+
+	d.Logger().Debugw(ctx, "🔄 Connecting to database", "name", d.Config().Database.Name, "user", d.Config().Database.Username)
 	conn, err := sqlx.Connect("postgres", dsn)
 	if err != nil {
-		d.Logger().Error("❌ Failed to connect to database", "error", err)
+		d.Logger().Errorw(ctx, "❌ Failed to connect to database", "error", err)
 		return nil, err
 	}
 
-	d.Logger().Info("✅ Successfully connected to database")
+	d.Logger().Infow(ctx, "✅ Successfully connected to database")
 
 	return &db{conn}, nil
 }

@@ -3,10 +3,10 @@ package tracker
 import (
 	"context"
 
-	"github.com/PROJECT_NAME/internal/logger"
-	"github.com/PROJECT_NAME/internal/nats"
 	"github.com/getsentry/sentry-go"
 	"github.com/google/uuid"
+	"github.com/nayla-finance/go-nayla/logger"
+	"github.com/nayla-finance/go-nayla/nats"
 )
 
 var _ Service = &svc{}
@@ -24,7 +24,7 @@ type (
 	svcDependencies interface {
 		RepositoryProvider
 		nats.ServiceProvider
-		logger.LoggerProvider
+		logger.Provider
 	}
 
 	svc struct {
@@ -40,17 +40,17 @@ func NewService(d svcDependencies) Service {
 // it'll log it and continue.
 func (s *svc) PublishCallCompleted(ctx context.Context, dto SaveCallDto) {
 	if err := s.d.NatsService().Publish(ctx, SubjectCallCompleted, dto); err != nil {
-		s.d.Logger().Errorw("failed to publish request to nats", "error", err, "dto", dto)
+		s.d.Logger().Errorw(ctx, "failed to publish request to nats", "error", err, "dto", dto)
 		sentry.CaptureException(err)
 	}
 }
 
 func (s *svc) saveCall(ctx context.Context, dto SaveCallDto) error {
-	s.d.Logger().Debugw("🔍 Saving call", "dto", dto)
+	s.d.Logger().Debugw(ctx, "🔍 Saving call", "dto", dto)
 
 	id, err := uuid.NewV7()
 	if err != nil {
-		s.d.Logger().Errorw("failed to generate request ID", "error", err)
+		s.d.Logger().Errorw(ctx, "failed to generate request ID", "error", err)
 		return err
 	}
 
@@ -69,18 +69,18 @@ func (s *svc) saveCall(ctx context.Context, dto SaveCallDto) error {
 	}
 
 	if err := s.d.TrackerRepository().Create(ctx, tracker); err != nil {
-		s.d.Logger().Errorw("failed to save tracker", "error", err, "tracker", tracker)
+		s.d.Logger().Errorw(ctx, "failed to save tracker", "error", err, "tracker", tracker)
 		return err
 	}
 
 	tracker, err = s.d.TrackerRepository().GetByID(ctx, id)
 	if err != nil {
-		s.d.Logger().Errorw("failed to get tracker", "error", err, "id", id)
+		s.d.Logger().Errorw(ctx, "failed to get tracker", "error", err, "id", id)
 		return err
 	}
 
 	if err := s.d.NatsService().Publish(ctx, SubjectCallTracked, tracker); err != nil {
-		s.d.Logger().Errorw("failed to publish tracker to nats", "error", err, "tracker", tracker)
+		s.d.Logger().Errorw(ctx, "failed to publish tracker to nats", "error", err, "tracker", tracker)
 		return err
 	}
 
