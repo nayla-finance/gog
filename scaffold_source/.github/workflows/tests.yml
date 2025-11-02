@@ -2,7 +2,7 @@ name: Run Go tests
 
 on:
   pull_request:
-    branches: [dev]
+    branches: [dev, stage, master]
 
 jobs:
   test:
