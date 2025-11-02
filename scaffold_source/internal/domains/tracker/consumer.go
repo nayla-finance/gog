@@ -5,7 +5,7 @@ import (
 	"encoding/json"
 
 	"github.com/PROJECT_NAME/internal/config"
-	"github.com/PROJECT_NAME/internal/domains/model"
+	"github.com/PROJECT_NAME/internal/domains/interfaces"
 	"github.com/nats-io/nats.go/jetstream"
 	"github.com/nayla-finance/go-nayla/logger"
 	"github.com/nayla-finance/go-nayla/nats"
@@ -59,7 +59,7 @@ func (c *consumer) callCompletedHandler(ctx context.Context, msg jetstream.Msg) 
 	return nil
 }
 
-func (c *consumer) unmarshalAndValidate(data []byte, p model.Payload) error {
+func (c *consumer) unmarshalAndValidate(data []byte, p interfaces.Payload) error {
 	if err := json.Unmarshal(data, p); err != nil {
 		return err
 	}
